@@ -370,3 +370,5 @@ Project ini dibuat untuk keperluan akademik. Silakan sesuaikan dengan kebutuhan 
 **Dibuat dengan ❤️ oleh Tim Rekrutasi Pegawai**
 
 Untuk pertanyaan atau bantuan, silakan buka [Issues](../../issues) atau hubungi tim development.
+#   r e k r u t a s i - p e g a w a i  
+ 
