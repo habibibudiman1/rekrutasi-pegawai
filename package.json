@@ -1,0 +1,22 @@
+{
+  "name": "rekrutasi-pegawai",
+  "version": "1.0.0",
+  "description": "Website Rekrutasi Pegawai dengan Supabase",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx serve frontend/pages",
+    "start": "npx serve frontend/pages"
+  },
+  "keywords": [
+    "recruitment",
+    "job",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {}
+}
+

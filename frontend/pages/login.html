@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk - Rekrutasi Pegawai</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-shield-lock-fill text-primary fs-1 mb-3"></i>
+                            <h2 class="fw-bold">Masuk ke Akun</h2>
+                            <p class="text-muted">Masuk untuk mengakses dashboard Anda</p>
+                        </div>
+
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">
+                                    Ingat saya
+                                </label>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Masuk
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="#" class="text-decoration-none">Lupa Password?</a>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <div class="text-center">
+                            <p class="text-muted">Belum punya akun? <a href="register.html" class="text-primary fw-bold text-decoration-none">Daftar Sekarang</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="index.html" class="text-muted text-decoration-none">
+                        <i class="bi bi-arrow-left me-2"></i>Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load Supabase script dynamically and wait for it
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+            script.onload = function() {
+                console.log('✅ Supabase script loaded');
+                // Load init script after Supabase is loaded
+                const initScript = document.createElement('script');
+                initScript.src = '../js/supabase-init.js';
+                initScript.onload = function() {
+                    console.log('✅ Supabase init script loaded');
+                    // Load auth modules after init
+                    const authScript = document.createElement('script');
+                    authScript.src = '../js/modules/auth.js';
+                    authScript.onload = function() {
+                        const mainScript = document.createElement('script');
+                        mainScript.src = '../js/main.js';
+                        mainScript.onload = function() {
+                            // Initialize page scripts
+                            initializePage();
+                        };
+                        document.body.appendChild(mainScript);
+                    };
+                    document.body.appendChild(authScript);
+                };
+                document.body.appendChild(initScript);
+            };
+            script.onerror = function() {
+                console.error('❌ Failed to load Supabase script');
+                alert('Gagal memuat Supabase. Silakan refresh halaman.');
+            };
+            document.head.appendChild(script);
+        })();
+        
+        function initializePage() {
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+
+            // Wait for Supabase to be ready before attempting login
+            try {
+                if (window.supabaseReady) {
+                    await window.supabaseReady;
+                } else {
+                    // Fallback: wait a bit for Supabase to initialize
+                    console.warn('supabaseReady not found, waiting...');
+                    let waited = 0;
+                    while (!window.supabase && waited < 5000) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        waited += 100;
+                    }
+                    if (!window.supabase) {
+                        throw new Error('Supabase tidak tersedia setelah menunggu');
+                    }
+                }
+                
+                // Double check that Supabase is available
+                if (!window.supabase || !window.supabase.auth) {
+                    throw new Error('Supabase client tidak terinisialisasi dengan benar');
+                }
+            } catch (error) {
+                console.error('Error waiting for Supabase:', error);
+                showAlert('Gagal memuat Supabase. Silakan refresh halaman dan coba lagi.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Masuk';
+                return;
+            }
+
+            const result = await authManager.login(email, password);
+
+            if (result.success) {
+                console.log('✅ Login berhasil, memuat profil...');
+                
+                // Wait a moment to ensure session is saved
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Get user profile to determine redirect (with retry mechanism)
+                let profile = null;
+                let retryCount = 0;
+                const maxRetries = 5;
+                
+                while (!profile && retryCount < maxRetries) {
+                    console.log(`Mencoba memuat profil... (${retryCount + 1}/${maxRetries})`);
+                    
+                    // Method 1: Try getCurrentUserProfile
+                    profile = await authManager.getCurrentUserProfile();
+                    
+                    // Method 2: If profile still not found, try querying directly from database
+                    if (!profile && authManager.currentUser) {
+                        try {
+                            const supabaseClient = authManager.getSupabaseClient();
+                            if (supabaseClient) {
+                                console.log('Mencoba query langsung ke database...');
+                                const { data, error } = await supabaseClient
+                                    .from('user_profiles')
+                                    .select('*')
+                                    .eq('id', authManager.currentUser.id)
+                                    .maybeSingle();
+                                
+                                if (!error && data) {
+                                    profile = data;
+                                    console.log('✅ Profile berhasil dimuat via direct query:', { 
+                                        id: profile.id, 
+                                        role: profile.role,
+                                        is_verified: profile.is_verified 
+                                    });
+                                } else if (error) {
+                                    console.warn('Error direct query:', error.message);
+                                }
+                            }
+                        } catch (error) {
+                            console.warn('Direct profile query failed:', error);
+                        }
+                    }
+                    
+                    if (!profile && retryCount < maxRetries - 1) {
+                        console.log(`Profile belum ditemukan, retry dalam 800ms...`);
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        retryCount++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Determine redirect based on role
+                if (profile) {
+                    console.log('✅ Profile ditemukan:', { 
+                        role: profile.role, 
+                        is_verified: profile.is_verified,
+                        full_name: profile.full_name 
+                    });
+                    
+                    // Redirect berdasarkan role
+                    if (profile.role === 'HRD') {
+                        if (profile.is_verified) {
+                            console.log('🔄 Redirecting HRD ke dashboard-hrd.html');
+                            window.location.href = 'dashboard-hrd.html';
+                        } else {
+                            console.warn('⚠️ HRD belum terverifikasi');
+                            showAlert('Akun HRD Anda belum terverifikasi. Silakan tunggu verifikasi dari admin.', 'warning');
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 3000);
+                        }
+                    } else if (profile.role === 'Pelamar') {
+                        console.log('🔄 Redirecting Pelamar ke dashboard-pelamar.html');
+                        window.location.href = 'dashboard-pelamar.html';
+                    } else {
+                        console.warn('⚠️ Role tidak dikenal:', profile.role, '- Redirecting ke pelamar dashboard');
+                        window.location.href = 'dashboard-pelamar.html';
+                    }
+                } else {
+                    // If profile still not found after retries, show error and stay on login page
+                    console.error('❌ Profile tidak ditemukan setelah semua retry');
+                    console.error('User ID:', authManager.currentUser?.id);
+                    showAlert('Gagal memuat profil pengguna. Silakan coba login lagi atau hubungi administrator.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Masuk';
+                }
+            } else {
+                showAlert('Login gagal: ' + result.error, 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Masuk';
+            }
+        });
+        }
+    </script>
+</body>
+</html>
+

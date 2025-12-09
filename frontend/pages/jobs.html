@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lowongan Pekerjaan - Rekrutasi Pegawai</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="index.html">
+                <i class="bi bi-briefcase-fill me-2"></i>RekrutasiPegawai
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <nav class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="jobs.html">Lowongan Pekerjaan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">Tentang Kami</a>
+                    </li>
+                    <li class="nav-item" id="authNav">
+                        <a class="nav-link" href="login.html">Masuk</a>
+                    </li>
+                    <li class="nav-item" id="registerNav">
+                        <a class="nav-link btn btn-primary text-white px-3 rounded-pill ms-2" href="register.html">Daftar</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container" style="margin-top: 100px;">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="fw-bold mb-3">Lowongan Pekerjaan</h1>
+                <p class="text-muted">Temukan pekerjaan impian Anda</p>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control search-bar" id="searchInput" placeholder="Cari lowongan...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">Semua Kategori</option>
+                            <option value="IT">IT & Software</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Finance">Finance</option>
+                            <option value="HR">HR</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Design">Design</option>
+                            <option value="Other">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="locationFilter" placeholder="Lokasi...">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" onclick="searchJobs()">
+                            <i class="bi bi-search me-2"></i>Cari
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jobs List -->
+        <div id="jobsList">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-briefcase-fill me-2"></i>RekrutasiPegawai
+                    </h5>
+                    <p class="text-muted">Platform rekrutasi terpercaya yang menghubungkan perusahaan dengan talenta terbaik.</p>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="fw-bold mb-3">Tautan</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="about.html" class="text-white-50 text-decoration-none">Tentang Kami</a></li>
+                        <li><a href="jobs.html" class="text-white-50 text-decoration-none">Lowongan</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="fw-bold mb-3">Legal</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Syarat & Ketentuan</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Kebijakan Privasi</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Kontak</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="fw-bold mb-3">Ikuti Kami</h6>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-white fs-4"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-white-50">
+            <div class="text-center text-muted">
+                <p>&copy; 2024 RekrutasiPegawai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/supabase-init.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/applications.js"></script>
+    <script>
+        async function loadJobs() {
+            try {
+                // Wait for Supabase to be ready
+                await authManager.waitForSupabase(5000);
+                
+                // Show loading
+                const container = document.getElementById('jobsList');
+                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+                
+                const jobs = await jobsManager.getAllJobs();
+                
+                if (!jobs || jobs.length === 0) {
+                    // Try direct query as fallback
+                    console.warn('jobsManager.getAllJobs returned empty, trying direct query...');
+                    const supabaseClient = authManager.getSupabaseClient();
+                    if (supabaseClient) {
+                        try {
+                            const { data, error } = await supabaseClient
+                                .from('jobs')
+                                .select('*')
+                                .eq('is_active', true)
+                                .order('created_at', { ascending: false });
+                            
+                            if (!error && data && data.length > 0) {
+                                console.log('Jobs loaded via direct query:', data.length);
+                                displayJobs(data);
+                                return;
+                            } else if (error) {
+                                console.error('Direct query error:', error);
+                            }
+                        } catch (error) {
+                            console.error('Direct query exception:', error);
+                        }
+                    }
+                }
+                
+                displayJobs(jobs || []);
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                const container = document.getElementById('jobsList');
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Gagal memuat lowongan</strong>
+                        <p class="mb-0 mt-2">Terjadi kesalahan saat memuat data lowongan. Silakan refresh halaman atau coba lagi nanti.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayJobs(jobs) {
+            const container = document.getElementById('jobsList');
+            
+            if (jobs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i><p>Tidak ada lowongan ditemukan</p></div>';
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => `
+                <div class="card job-card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="fw-bold mb-2">${job.title}</h5>
+                                <p class="text-muted mb-2">
+                                    <i class="bi bi-building me-2"></i>${job.company}
+                                    <span class="ms-3"><i class="bi bi-geo-alt me-2"></i>${job.location || 'N/A'}</span>
+                                </p>
+                                <div class="mb-2">
+                                    <span class="job-badge bg-primary text-white me-2">${job.category || 'N/A'}</span>
+                                    <span class="job-badge bg-secondary text-white">${job.employment_type || 'N/A'}</span>
+                                    ${job.salary_min ? `<span class="job-badge bg-success text-white">${formatCurrency(job.salary_min)} - ${formatCurrency(job.salary_max || job.salary_min)}</span>` : ''}
+                                </div>
+                                <p class="text-muted mb-0">${job.description.substring(0, 200)}...</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="d-flex flex-column gap-2 align-items-end">
+                                    <a href="job-detail.html?id=${job.id}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-2"></i>Lihat Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function searchJobs() {
+            try {
+                // Wait for Supabase to be ready
+                await authManager.waitForSupabase(5000);
+                
+                const search = document.getElementById('searchInput').value;
+                const category = document.getElementById('categoryFilter').value;
+                const location = document.getElementById('locationFilter').value;
+
+                const filters = {};
+                if (search) filters.search = search;
+                if (category) filters.category = category;
+                if (location) filters.location = location;
+
+                // Show loading
+                const container = document.getElementById('jobsList');
+                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                const jobs = await jobsManager.getAllJobs(filters);
+                
+                // If empty, try direct query
+                if (!jobs || jobs.length === 0) {
+                    const supabaseClient = authManager.getSupabaseClient();
+                    if (supabaseClient) {
+                        try {
+                            let query = supabaseClient
+                                .from('jobs')
+                                .select('*')
+                                .eq('is_active', true);
+                            
+                            if (category) {
+                                query = query.eq('category', category);
+                            }
+                            if (location) {
+                                query = query.ilike('location', `%${location}%`);
+                            }
+                            if (search) {
+                                query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,company.ilike.%${search}%`);
+                            }
+                            
+                            const { data, error } = await query.order('created_at', { ascending: false });
+                            
+                            if (!error && data && data.length > 0) {
+                                displayJobs(data);
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Direct query error:', error);
+                        }
+                    }
+                }
+                
+                displayJobs(jobs || []);
+            } catch (error) {
+                console.error('Error searching jobs:', error);
+                showAlert('Gagal mencari lowongan: ' + error.message, 'danger');
+            }
+        }
+
+        // Load jobs on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadJobs();
+            
+            // Search on enter
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        searchJobs();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

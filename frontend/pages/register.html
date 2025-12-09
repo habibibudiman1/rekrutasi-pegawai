@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar - Rekrutasi Pegawai</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100 py-5">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-person-plus-fill text-primary fs-1 mb-3"></i>
+                            <h2 class="fw-bold">Daftar Akun Baru</h2>
+                            <p class="text-muted">Pilih peran Anda untuk memulai</p>
+                        </div>
+
+                        <!-- Role Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Saya ingin mendaftar sebagai:</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="role" id="rolePelamar" value="Pelamar" checked>
+                                    <label class="btn btn-outline-primary w-100 py-3" for="rolePelamar">
+                                        <i class="bi bi-person-fill d-block fs-3 mb-2"></i>
+                                        <strong>Pelamar</strong>
+                                        <small class="d-block text-muted mt-1">Cari dan lamar pekerjaan</small>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="role" id="roleHRD" value="HRD">
+                                    <label class="btn btn-outline-success w-100 py-3" for="roleHRD">
+                                        <i class="bi bi-building d-block fs-3 mb-2"></i>
+                                        <strong>HRD</strong>
+                                        <small class="d-block text-muted mt-1">Posting lowongan pekerjaan</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="registerForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fullName" class="form-label">Nama Lengkap</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <input type="text" class="form-control" id="fullName" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-at"></i></span>
+                                        <input type="text" class="form-control" id="username" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3" id="companyNameGroup" style="display: none;">
+                                <label for="companyName" class="form-label">Nama Perusahaan</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                    <input type="text" class="form-control" id="companyName">
+                                </div>
+                                <small class="text-muted">Wajib diisi untuk HRD</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Nomor Telepon</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" id="phone" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Minimal 6 karakter</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Konfirmasi Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    Saya setuju dengan <a href="#" class="text-primary">Syarat & Ketentuan</a> dan <a href="#" class="text-primary">Kebijakan Privasi</a>
+                                </label>
+                            </div>
+
+                            <div class="alert alert-info" id="hrdInfo" style="display: none;">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Catatan untuk HRD:</strong> Setelah pendaftaran, akun Anda akan diverifikasi oleh admin sebelum dapat memposting lowongan pekerjaan.
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                    <i class="bi bi-person-plus me-2"></i>Daftar
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <div class="text-center">
+                            <p class="text-muted">Sudah punya akun? <a href="login.html" class="text-primary fw-bold text-decoration-none">Masuk</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="index.html" class="text-muted text-decoration-none">
+                        <i class="bi bi-arrow-left me-2"></i>Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/supabase-init.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        // Get role from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleParam = urlParams.get('role');
+        if (roleParam === 'HRD') {
+            document.getElementById('roleHRD').checked = true;
+            document.getElementById('companyNameGroup').style.display = 'block';
+            document.getElementById('hrdInfo').style.display = 'block';
+        }
+
+        // Toggle company name field based on role
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isHRD = this.value === 'HRD';
+                document.getElementById('companyNameGroup').style.display = isHRD ? 'block' : 'none';
+                document.getElementById('hrdInfo').style.display = isHRD ? 'block' : 'none';
+                if (isHRD) {
+                    document.getElementById('companyName').required = true;
+                } else {
+                    document.getElementById('companyName').required = false;
+                }
+            });
+        });
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+
+        // Handle registration form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Ensure Supabase is initialized before proceeding
+            if (!window.supabase) {
+                showAlert('Supabase belum terinisialisasi. Silakan refresh halaman dan coba lagi.', 'danger');
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showAlert('Password dan konfirmasi password tidak cocok!', 'danger');
+                return;
+            }
+
+            const role = document.querySelector('input[name="role"]:checked').value;
+            const companyName = document.getElementById('companyName').value;
+
+            if (role === 'HRD' && !companyName) {
+                showAlert('Nama perusahaan wajib diisi untuk HRD!', 'danger');
+                return;
+            }
+
+            const userData = {
+                username: document.getElementById('username').value,
+                fullName: document.getElementById('fullName').value,
+                phone: document.getElementById('phone').value,
+                companyName: companyName || null,
+                role: role
+            };
+
+            const email = document.getElementById('email').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+
+            try {
+                // Add timeout to prevent infinite loading
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Registrasi timeout. Silakan coba lagi.')), 30000)
+                );
+                
+                const result = await Promise.race([
+                    authManager.register(email, password, userData),
+                    timeoutPromise
+                ]);
+
+                if (result && result.success) {
+                    // Update button to show success
+                    submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Berhasil!';
+                    submitBtn.classList.remove('btn-primary');
+                    submitBtn.classList.add('btn-success');
+                    
+                    // Show success message
+                    const successMessage = role === 'HRD' 
+                        ? 'Pendaftaran berhasil! Akun Anda akan diverifikasi oleh admin. Silakan login untuk melanjutkan.'
+                        : 'Pendaftaran berhasil! Silakan login untuk melanjutkan.';
+                    
+                    if (typeof showAlert === 'function') {
+                        showAlert(successMessage, 'success');
+                    } else {
+                        alert(successMessage);
+                    }
+                    
+                    // Redirect to login page after short delay
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    // Show error and reset button
+                    const errorMsg = result && result.error ? result.error : 'Terjadi kesalahan saat registrasi';
+                    if (typeof showAlert === 'function') {
+                        showAlert('Registrasi gagal: ' + errorMsg, 'danger');
+                    } else {
+                        alert('Registrasi gagal: ' + errorMsg);
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Daftar';
+                    submitBtn.classList.remove('btn-success');
+                    submitBtn.classList.add('btn-primary');
+                }
+            } catch (error) {
+                console.error('Registration form error:', error);
+                // Show error and reset button
+                const errorMsg = error.message || 'Terjadi kesalahan saat registrasi';
+                if (typeof showAlert === 'function') {
+                    showAlert('Registrasi gagal: ' + errorMsg, 'danger');
+                } else {
+                    alert('Registrasi gagal: ' + errorMsg);
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Daftar';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,61 @@
+STRUKTUR FOLDER PROYEK REKRUTASI PEGAWAI
+==========================================
+
+Rekrutasi-Pegawai/
+│
+├── frontend/                    # FRONTEND APPLICATION
+│   ├── pages/                  # Halaman HTML
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── jobs.html
+│   │   ├── job-detail.html
+│   │   ├── dashboard-hrd.html
+│   │   ├── dashboard-pelamar.html
+│   │   └── about.html
+│   │
+│   ├── css/                    # Stylesheet
+│   │   └── style.css
+│   │
+│   └── js/                     # JavaScript
+│       ├── main.js
+│       ├── dashboard-hrd.js
+│       ├── dashboard-pelamar.js
+│       └── modules/           # JavaScript Modules
+│           ├── auth.js
+│           ├── jobs.js
+│           └── applications.js
+│
+├── backend/                     # BACKEND CONFIGURATION
+│   └── config/
+│       └── config.js
+│
+├── database/                    # DATABASE SCHEMA
+│   └── schema.sql
+│
+├── docs/                       # DOCUMENTATION
+│   ├── README.md
+│   ├── SETUP.md
+│   └── STRUCTURE.md
+│
+├── assets/                      # STATIC ASSETS
+│   └── images/
+│
+├── package.json
+├── README.md
+├── .gitignore
+└── STRUCTURE.txt
+
+CATATAN:
+- Semua file HTML ada di frontend/pages/
+- Path CSS: ../css/style.css (dari HTML)
+- Path JS Modules: ../js/modules/[module].js
+- Path JS Utils: ../js/[file].js
+- Supabase diinisialisasi inline di setiap HTML file
+
+
+
+
+
+
+
