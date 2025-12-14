@@ -77,3 +77,4 @@ echo "4. Buka browser: http://localhost:3000"
 echo ""
 echo "Untuk panduan lengkap, baca file SETUP_TEAM.md"
 echo ""
+
