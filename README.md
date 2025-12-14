@@ -6,6 +6,7 @@ Platform rekrutasi terpercaya yang menghubungkan perusahaan (HRD) dengan talenta
 
 - [Fitur Utama](#-fitur-utama)
 - [Teknologi yang Digunakan](#-teknologi-yang-digunakan)
+- [Quick Start untuk Tim](#-quick-start-untuk-tim) ⚡
 - [Prerequisites](#-prerequisites)
 - [Setup Awal](#-setup-awal)
   - [1. Setup Supabase](#1-setup-supabase)
@@ -49,6 +50,33 @@ Platform rekrutasi terpercaya yang menghubungkan perusahaan (HRD) dengan talenta
 - **Tools:**
   - Git untuk version control
   - Supabase Dashboard untuk manajemen database
+
+## ⚡ Quick Start untuk Tim
+
+**Untuk anggota tim yang ingin langsung setup dan menjalankan proyek:**
+
+📖 **Baca panduan lengkap:** [SETUP_TEAM.md](SETUP_TEAM.md)
+
+**Cara tercepat (Windows):**
+```bash
+# Double-click file setup-team.bat
+setup-team.bat
+```
+
+**Cara tercepat (Linux/Mac):**
+```bash
+chmod +x setup-team.sh
+./setup-team.sh
+```
+
+Setelah script selesai, jalankan:
+```bash
+npm run dev
+```
+
+Buka browser: `http://localhost:3000`
+
+---
 
 ## 📦 Prerequisites
 
