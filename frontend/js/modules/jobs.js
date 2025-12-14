@@ -2,7 +2,25 @@
 
 // Helper function to get Supabase client
 function getSupabaseClient() {
-    return typeof supabase !== 'undefined' ? supabase : window.supabase;
+    // Use authManager if available (more reliable)
+    if (typeof authManager !== 'undefined' && authManager.getSupabaseClient) {
+        return authManager.getSupabaseClient();
+    }
+    
+    // Fallback: Check window.supabase first (most reliable)
+    if (typeof window !== 'undefined' && window.supabase) {
+        // Verify it has auth method
+        if (window.supabase.auth && typeof window.supabase.auth.signInWithPassword === 'function') {
+            return window.supabase;
+        }
+    }
+    
+    // Fallback to global supabase
+    if (typeof supabase !== 'undefined' && supabase.auth) {
+        return supabase;
+    }
+    
+    return null;
 }
 
 class JobsManager {
@@ -87,11 +105,18 @@ class JobsManager {
 
     async getJobById(jobId) {
         try {
+            if (!jobId) {
+                console.warn('getJobById: No jobId provided');
+                return null;
+            }
+
             const supabaseClient = getSupabaseClient();
             if (!supabaseClient) {
                 console.warn('getJobById: No Supabase client');
                 return null;
             }
+            
+            console.log('getJobById: Fetching job with ID:', jobId);
             
             // Try with join first
             let { data, error } = await supabaseClient
@@ -103,7 +128,7 @@ class JobsManager {
 
             // If join fails, try without join
             if (error || !data) {
-                console.warn('Join query failed, trying without join...');
+                console.warn('Join query failed, trying without join...', error?.message || 'No data');
                 const { data: simpleData, error: simpleError } = await supabaseClient
                     .from('jobs')
                     .select('*')
@@ -114,22 +139,52 @@ class JobsManager {
                 if (!simpleError && simpleData) {
                     data = simpleData;
                     error = null;
+                    console.log('getJobById: Job found without join');
                 } else if (simpleError) {
                     error = simpleError;
+                    console.warn('getJobById: Simple query error:', simpleError.message);
+                }
+            } else {
+                console.log('getJobById: Job found with join');
+            }
+
+            // If still no data and no error, try without is_active filter (for debugging)
+            if (!data && !error) {
+                console.warn('getJobById: No data found with is_active filter, trying without filter...');
+                const { data: inactiveData, error: inactiveError } = await supabaseClient
+                    .from('jobs')
+                    .select('*')
+                    .eq('id', jobId)
+                    .maybeSingle();
+                
+                if (!inactiveError && inactiveData) {
+                    console.warn('getJobById: Job found but is not active');
+                    // Return null for inactive jobs (as per business logic)
+                    return null;
+                } else if (inactiveError && inactiveError.code !== 'PGRST116') {
+                    console.error('getJobById: Error fetching job without is_active filter:', inactiveError);
                 }
             }
 
             if (error) {
                 // Ignore PGRST116 (not found) - it's expected for non-existent jobs
                 if (error.code !== 'PGRST116') {
-                    console.error('Error fetching job:', error);
+                    console.error('getJobById: Error fetching job:', error);
+                } else {
+                    console.log('getJobById: Job not found (PGRST116)');
                 }
                 return null;
             }
 
+            if (data) {
+                console.log('getJobById: Successfully fetched job:', data.title);
+            } else {
+                console.warn('getJobById: No data returned for jobId:', jobId);
+            }
+
             return data;
         } catch (error) {
-            console.error('Error fetching job:', error);
+            console.error('getJobById: Exception fetching job:', error);
             return null;
         }
     }

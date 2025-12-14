@@ -1122,9 +1122,9 @@ function displayJobs(jobs) {
                                         <i class="bi bi-send me-2"></i>Lamar Sekarang
                                     </button>`
                                 }
-                                <a href="job-detail.html?id=${job.id}" class="btn btn-outline-primary">
+                                ${job.id ? `<a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="btn btn-outline-primary" onclick="sessionStorage.setItem('lastViewedJobId', '${job.id}')">
                                     <i class="bi bi-eye me-2"></i>Lihat Detail
-                                </a>
+                                </a>` : '<span class="text-muted">ID tidak tersedia</span>'}
                             </div>
                         </div>
                     </div>
@@ -1188,9 +1188,9 @@ function displayApplications(applications) {
                             <span class="status-badge ${statusClass}">${app.status}</span>
                         </div>
                         <div class="col-md-3 text-end">
-                            <a href="job-detail.html?id=${app.job_id}" class="btn btn-outline-primary">
+                            ${app.job_id ? `<a href="job-detail.html?id=${encodeURIComponent(app.job_id)}" class="btn btn-outline-primary" onclick="sessionStorage.setItem('lastViewedJobId', '${app.job_id}')">
                                 <i class="bi bi-eye me-2"></i>Lihat Lowongan
-                            </a>
+                            </a>` : '<span class="text-muted">ID tidak tersedia</span>'}
                         </div>
                     </div>
                 </div>
@@ -1231,9 +1231,9 @@ function displayRecommendations(jobs) {
                     </div>
                     <div class="col-md-4 text-end">
                         <div class="d-flex flex-column gap-2 align-items-end">
-                            <a href="job-detail.html?id=${job.id}" class="btn btn-outline-primary">
+                            ${job.id ? `<a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="btn btn-outline-primary">
                                 <i class="bi bi-eye me-2"></i>Lihat Detail
-                            </a>
+                            </a>` : '<span class="text-muted">ID tidak tersedia</span>'}
                         </div>
                     </div>
                 </div>

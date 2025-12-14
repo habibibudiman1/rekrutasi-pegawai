@@ -99,39 +99,119 @@
                 // Wait for Supabase to be ready
                 await authManager.waitForSupabase(5000);
                 
+                // Get jobId from URL - try multiple methods
+                let jobId = null;
+                
+                // Method 1: URLSearchParams (standard)
                 const urlParams = new URLSearchParams(window.location.search);
-                const jobId = urlParams.get('id');
+                jobId = urlParams.get('id');
+                
+                // Method 2: Direct parsing if Method 1 fails
+                if (!jobId && window.location.search) {
+                    const match = window.location.search.match(/[?&]id=([^&]+)/);
+                    if (match && match[1]) {
+                        jobId = decodeURIComponent(match[1]);
+                    }
+                }
+                
+                // Method 3: Check hash (for SPA routing)
+                if (!jobId && window.location.hash) {
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                    jobId = hashParams.get('id');
+                }
+
+                console.log('loadJobDetail: Full URL:', window.location.href);
+                console.log('loadJobDetail: URL pathname:', window.location.pathname);
+                console.log('loadJobDetail: URL search:', window.location.search);
+                console.log('loadJobDetail: URL hash:', window.location.hash);
+                console.log('loadJobDetail: jobId from URL:', jobId);
 
                 if (!jobId) {
-                    document.getElementById('jobDetail').innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Lowongan tidak ditemukan. ID lowongan tidak valid.</div>';
-                    return;
+                    console.error('loadJobDetail: No jobId in URL');
+                    console.error('loadJobDetail: Full URL:', window.location.href);
+                    console.error('loadJobDetail: Search params:', window.location.search);
+                    
+                    // Try to get jobId from sessionStorage (if user clicked from jobs list)
+                    const storedJobId = sessionStorage.getItem('lastViewedJobId');
+                    if (storedJobId) {
+                        console.log('loadJobDetail: Found jobId in sessionStorage:', storedJobId);
+                        jobId = storedJobId;
+                        // Update URL without reload
+                        const newUrl = window.location.pathname + '?id=' + encodeURIComponent(jobId);
+                        window.history.replaceState({}, '', newUrl);
+                    } else {
+                        // No jobId found, show error and redirect after 3 seconds
+                        document.getElementById('jobDetail').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>ID Lowongan Tidak Ditemukan</strong>
+                                <p class="mb-0 mt-2">Halaman ini memerlukan parameter ID lowongan. Anda akan diarahkan ke halaman daftar lowongan dalam <span id="countdown">3</span> detik.</p>
+                                <div class="mt-3">
+                                    <a href="jobs.html" class="btn btn-primary me-2">
+                                        <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Lowongan
+                                    </a>
+                                    <a href="index.html" class="btn btn-outline-secondary">
+                                        <i class="bi bi-house me-2"></i>Kembali ke Home
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Auto-redirect after 3 seconds
+                        let countdown = 3;
+                        const countdownEl = document.getElementById('countdown');
+                        const redirectInterval = setInterval(() => {
+                            countdown--;
+                            if (countdownEl) {
+                                countdownEl.textContent = countdown;
+                            }
+                            if (countdown <= 0) {
+                                clearInterval(redirectInterval);
+                                window.location.href = 'jobs.html';
+                            }
+                        }, 1000);
+                        
+                        return;
+                    }
+                }
+
+                // Trim whitespace from jobId
+                const trimmedJobId = jobId.trim();
+                if (trimmedJobId !== jobId) {
+                    console.warn('loadJobDetail: jobId had whitespace, trimmed:', trimmedJobId);
                 }
 
                 // Try to get job using jobsManager
-                currentJob = await jobsManager.getJobById(jobId);
+                console.log('loadJobDetail: Calling jobsManager.getJobById with:', trimmedJobId);
+                currentJob = await jobsManager.getJobById(trimmedJobId);
                 
                 // If jobsManager fails, try direct query as fallback
                 if (!currentJob) {
-                    console.warn('jobsManager.getJobById failed, trying direct query...');
+                    console.warn('loadJobDetail: jobsManager.getJobById failed, trying direct query...');
                     const supabaseClient = authManager.getSupabaseClient();
                     if (supabaseClient) {
                         try {
+                            console.log('loadJobDetail: Direct query with jobId:', trimmedJobId);
                             const { data, error } = await supabaseClient
                                 .from('jobs')
                                 .select('*')
-                                .eq('id', jobId)
+                                .eq('id', trimmedJobId)
                                 .eq('is_active', true)
                                 .maybeSingle();
                             
                             if (!error && data) {
                                 currentJob = data;
-                                console.log('Job loaded via direct query');
+                                console.log('loadJobDetail: Job loaded via direct query');
                             } else if (error) {
-                                console.error('Direct query error:', error);
+                                console.error('loadJobDetail: Direct query error:', error);
+                            } else {
+                                console.warn('loadJobDetail: Direct query returned no data');
                             }
                         } catch (error) {
-                            console.error('Direct query exception:', error);
+                            console.error('loadJobDetail: Direct query exception:', error);
                         }
+                    } else {
+                        console.error('loadJobDetail: No Supabase client available for direct query');
                     }
                 }
                 
@@ -152,7 +232,7 @@
                 // Check if user has applied
                 try {
                     if (await authManager.isAuthenticated()) {
-                        hasApplied = await applicationsManager.getApplicationByJob(jobId);
+                        hasApplied = await applicationsManager.getApplicationByJob(trimmedJobId);
                     }
                 } catch (error) {
                     console.warn('Error checking application status:', error);
