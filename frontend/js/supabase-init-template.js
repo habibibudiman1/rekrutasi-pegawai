@@ -10,7 +10,7 @@
 (function() {
     // GANTI DENGAN SUPABASE URL DAN API KEY ANDA
     const SUPABASE_URL = 'masukan ini dengan url supabase anda';  // Contoh: 'https://xxxxx.supabase.co'
-    const SUPABASE_ANON_KEY = 'masukan ini juga';  // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    const SUPABASE_ANON_KEY = 'masukan ini dengan anon key supabase anda';  // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     
     function findSupabaseLibrary() {
         // Try all possible ways the UMD build might expose the library
