@@ -222,14 +222,8 @@ function cancelProfileEdit() {
 
 // Handle profile form submission
 function setupProfileForm() {
-    // Edit profile button
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    if (editProfileBtn) {
-        editProfileBtn.addEventListener('click', () => {
-            const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
-            modal.show();
-        });
-    }
+    // Setup character counters on page load
+    setupCharacterCounters();
 }
 
 async function saveProfile() {
@@ -282,15 +276,19 @@ async function saveProfile() {
 function addPersonalSummary() {
     const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
     modal.show();
-    // Focus on bio field
+    // Setup character counters and focus on bio field
     setTimeout(() => {
+        setupCharacterCounters();
         document.getElementById('profileBio').focus();
-    }, 500);
+    }, 100);
 }
 
 function editPersonalSummary() {
     const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
     modal.show();
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
 }
 
 // ========== Career History CRUD ==========
@@ -357,6 +355,11 @@ function displayCareerHistory() {
 function openCareerModal(id = null) {
     const modal = new bootstrap.Modal(document.getElementById('careerModal'));
     const form = document.getElementById('careerForm');
+    
+    // Setup character counters when modal opens
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
     
     if (id) {
         const career = careerHistory.find(c => c.id === id);
@@ -582,6 +585,11 @@ function openEducationModal(id = null) {
     const modal = new bootstrap.Modal(document.getElementById('educationModal'));
     const form = document.getElementById('educationForm');
     
+    // Setup character counters when modal opens
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
+    
     if (id) {
         const edu = educationList.find(e => e.id === id);
         if (edu) {
@@ -802,6 +810,11 @@ function displayLicenses() {
 function openLicenseModal(id = null) {
     const modal = new bootstrap.Modal(document.getElementById('licenseModal'));
     const form = document.getElementById('licenseForm');
+    
+    // Setup character counters when modal opens
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
     
     if (id) {
         const license = licensesList.find(l => l.id === id);
@@ -1322,6 +1335,81 @@ async function submitApplication() {
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
+    }
+}
+
+// ========== Character Counter Functions ==========
+function setupCharacterCounters() {
+    // Define all fields with their counter IDs and max lengths
+    const fields = [
+        { inputId: 'profileFullName', counterId: 'profileFullNameCounter', maxLength: 100 },
+        { inputId: 'profileUsername', counterId: 'profileUsernameCounter', maxLength: 50 },
+        { inputId: 'profilePhone', counterId: 'profilePhoneCounter', maxLength: 20 },
+        { inputId: 'profileAddress', counterId: 'profileAddressCounter', maxLength: 500 },
+        { inputId: 'profileBio', counterId: 'profileBioCounter', maxLength: 2000 },
+        { inputId: 'profileLinkedIn', counterId: 'profileLinkedInCounter', maxLength: 200 },
+        { inputId: 'profilePortfolio', counterId: 'profilePortfolioCounter', maxLength: 200 },
+        { inputId: 'careerJobTitle', counterId: 'careerJobTitleCounter', maxLength: 100 },
+        { inputId: 'careerCompany', counterId: 'careerCompanyCounter', maxLength: 100 },
+        { inputId: 'careerLocation', counterId: 'careerLocationCounter', maxLength: 100 },
+        { inputId: 'careerDescription', counterId: 'careerDescriptionCounter', maxLength: 2000 },
+        { inputId: 'educationInstitution', counterId: 'educationInstitutionCounter', maxLength: 200 },
+        { inputId: 'educationDegree', counterId: 'educationDegreeCounter', maxLength: 100 },
+        { inputId: 'educationField', counterId: 'educationFieldCounter', maxLength: 100 },
+        { inputId: 'educationDescription', counterId: 'educationDescriptionCounter', maxLength: 1000 },
+        { inputId: 'licenseName', counterId: 'licenseNameCounter', maxLength: 200 },
+        { inputId: 'licenseOrganization', counterId: 'licenseOrganizationCounter', maxLength: 200 },
+        { inputId: 'licenseCredentialId', counterId: 'licenseCredentialIdCounter', maxLength: 100 },
+        { inputId: 'licenseCredentialUrl', counterId: 'licenseCredentialUrlCounter', maxLength: 200 },
+    ];
+    
+    // Setup counter for each field
+    fields.forEach(field => {
+        const input = document.getElementById(field.inputId);
+        const counter = document.getElementById(field.counterId);
+        
+        if (input && counter) {
+            // Check if listener already exists (avoid duplicates)
+            if (!input.dataset.counterSetup) {
+                // Update counter on input
+                input.addEventListener('input', () => {
+                    updateCharacterCounter(input, counter, field.maxLength);
+                });
+                
+                // Update counter on focus (for edit mode)
+                input.addEventListener('focus', () => {
+                    updateCharacterCounter(input, counter, field.maxLength);
+                });
+                
+                // Mark as setup
+                input.dataset.counterSetup = 'true';
+            }
+            
+            // Initial update
+            updateCharacterCounter(input, counter, field.maxLength);
+        }
+    });
+}
+
+function updateCharacterCounter(input, counter, maxLength) {
+    if (!input || !counter) return;
+    
+    const currentLength = input.value.length;
+    counter.textContent = `${currentLength}/${maxLength}`;
+    
+    // Get parent small element
+    const parentSmall = counter.parentElement;
+    
+    // Change color if approaching limit
+    if (currentLength >= maxLength * 0.9) {
+        parentSmall.classList.add('text-danger');
+        parentSmall.classList.remove('text-muted', 'text-warning');
+    } else if (currentLength >= maxLength * 0.75) {
+        parentSmall.classList.add('text-warning');
+        parentSmall.classList.remove('text-danger', 'text-muted');
+    } else {
+        parentSmall.classList.remove('text-danger', 'text-warning');
+        parentSmall.classList.add('text-muted');
     }
 }
 

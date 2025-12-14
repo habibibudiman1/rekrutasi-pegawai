@@ -4,8 +4,8 @@
   "description": "Website Rekrutasi Pegawai dengan Supabase",
   "main": "index.js",
   "scripts": {
-    "dev": "npx serve frontend/pages",
-    "start": "npx serve frontend/pages"
+    "dev": "npx serve frontend -l 3000",
+    "start": "npx serve frontend -l 3000"
   },
   "keywords": [
     "recruitment",

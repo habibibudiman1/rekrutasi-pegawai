@@ -1,0 +1,43 @@
+{
+  "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/register.html"
+    },
+    {
+      "source": "/jobs",
+      "destination": "/jobs.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html"
+    },
+    {
+      "source": "/dashboard-pelamar",
+      "destination": "/dashboard-pelamar.html"
+    },
+    {
+      "source": "/dashboard-hrd",
+      "destination": "/dashboard-hrd.html"
+    },
+    {
+      "source": "/job-detail",
+      "destination": "/job-detail.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "**/*.@(html|js|css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}

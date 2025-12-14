@@ -7,7 +7,7 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <!-- Header -->
@@ -177,24 +177,214 @@
 
                 <!-- Profile Page -->
                 <div id="profilePage" class="page-content" style="display: none;">
-                    <h2 class="fw-bold mb-4">Profil Saya</h2>
-                    
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header bg-white">
-                                    <h5 class="mb-0 fw-bold">Informasi Pribadi</h5>
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="profile-header-content">
+                            <div class="profile-avatar-section">
+                                <img src="https://ui-avatars.com/api/?name=Company&size=200&background=1A3D64&color=fff" 
+                                     alt="Company Logo" 
+                                     class="profile-avatar" 
+                                     id="profileHeaderImage">
+                                <button class="btn btn-change-avatar" title="Ubah Logo Perusahaan">
+                                    <i class="bi bi-camera-fill"></i>
+                                </button>
+                            </div>
+                            <div class="profile-header-info">
+                                <h1 class="profile-name" id="profileHeaderCompanyName">Nama Perusahaan</h1>
+                                <div class="profile-meta">
+                                    <span class="profile-location">
+                                        <i class="bi bi-geo-alt-fill me-2"></i>
+                                        <span id="profileHeaderLocation">Lokasi Perusahaan</span>
+                                    </span>
+                                    <span class="profile-email">
+                                        <i class="bi bi-envelope-fill me-2"></i>
+                                        <span id="profileHeaderEmail">email@perusahaan.com</span>
+                                    </span>
                                 </div>
-                                <div class="card-body">
+                            </div>
+                            <div class="profile-header-decorations">
+                                <div class="decoration-circle decoration-blue"></div>
+                                <div class="decoration-circle decoration-pink"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Content -->
+                    <div class="row mt-4">
+                        <!-- Left Column - Profile Sections -->
+                        <div class="col-lg-8">
+                            <!-- Tentang Perusahaan -->
+                            <div class="profile-section-card">
+                                <h5 class="profile-section-title">Tentang Perusahaan</h5>
+                                <p class="profile-section-desc">Tambahkan deskripsi perusahaan untuk memperkenalkan perusahaan Anda kepada calon kandidat.</p>
+                                <div id="companyAboutContent" class="profile-section-content" style="display: none;">
+                                    <p id="companyAboutText"></p>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-edit-section" onclick="editCompanyAbout()">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteCompanyAbout()">
+                                            <i class="bi bi-trash me-2"></i>Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-add-section" id="addCompanyAboutBtn" onclick="addCompanyAbout()">
+                                    <i class="bi bi-plus-circle me-2"></i>Tambah deskripsi perusahaan
+                                </button>
+                            </div>
+
+                            <!-- Informasi Perusahaan -->
+                            <div class="profile-section-card">
+                                <h5 class="profile-section-title">Informasi Perusahaan</h5>
+                                <p class="profile-section-desc">Lengkapi informasi detail perusahaan Anda untuk membantu kandidat mengenal perusahaan lebih baik.</p>
+                                <div id="companyInfoDisplay" class="profile-section-content" style="display: none;">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">Nama Perusahaan</small>
+                                                <p class="mb-0 fw-bold" id="displayCompanyName">-</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">Industri</small>
+                                                <p class="mb-0" id="displayCompanyIndustry">-</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">Ukuran Perusahaan</small>
+                                                <p class="mb-0" id="displayCompanySize">-</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">Website</small>
+                                                <p class="mb-0">
+                                                    <a href="#" id="displayCompanyWebsite" target="_blank" class="text-primary text-decoration-none">-</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">LinkedIn</small>
+                                                <p class="mb-0">
+                                                    <a href="#" id="displayCompanyLinkedIn" target="_blank" class="text-primary text-decoration-none">-</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="info-item">
+                                                <small class="text-muted d-block mb-1">Alamat</small>
+                                                <p class="mb-0" id="displayCompanyAddress">-</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-edit-section" onclick="editCompanyInfo()">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteCompanyInfo()">
+                                            <i class="bi bi-trash me-2"></i>Hapus Semua
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-add-section" id="addCompanyInfoBtn" onclick="addCompanyInfo()">
+                                    <i class="bi bi-plus-circle me-2"></i>Tambah Informasi Perusahaan
+                                </button>
+                            </div>
+
+                            <!-- Visi & Misi -->
+                            <div class="profile-section-card">
+                                <h5 class="profile-section-title">Visi & Misi</h5>
+                                <p class="profile-section-desc">Bagikan visi dan misi perusahaan Anda untuk menarik kandidat yang sesuai dengan nilai perusahaan.</p>
+                                <div id="visionMissionContent" class="profile-section-content" style="display: none;">
+                                    <div id="visionMissionText"></div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-edit-section" onclick="editVisionMission()">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteVisionMission()">
+                                            <i class="bi bi-trash me-2"></i>Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-add-section" id="addVisionMissionBtn" onclick="addVisionMission()">
+                                    <i class="bi bi-plus-circle me-2"></i>Tambah visi & misi
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Profile Status -->
+                        <div class="col-lg-4">
+                            <!-- Status Verifikasi -->
+                            <div class="profile-status-card">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="profile-status-title mb-0">Status Verifikasi</h6>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+                                <p class="profile-status-value mb-2" id="verificationStatus">Belum Terverifikasi</p>
+                                <p class="profile-status-desc mb-3">Perusahaan terverifikasi lebih dipercaya oleh kandidat.</p>
+                                <button class="btn btn-verify" id="verifyCompanyBtn" style="display: none;">
+                                    <i class="bi bi-shield-check me-2"></i>Ajukan Verifikasi
+                                </button>
+                            </div>
+
+                            <!-- Informasi Kontak -->
+                            <div class="profile-status-card">
+                                <h6 class="profile-status-title mb-3">Informasi Kontak</h6>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Email</small>
+                                    <p class="profile-status-value mb-0" id="contactEmail">-</p>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Telepon</small>
+                                    <p class="profile-status-value mb-0" id="contactPhone">-</p>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Alamat</small>
+                                    <p class="profile-status-value mb-0" id="contactAddress">-</p>
+                                </div>
+                                <button class="btn btn-add-section mt-2" onclick="editContactInfo()">
+                                    <i class="bi bi-pencil me-2"></i>Edit Kontak
+                                </button>
+                            </div>
+
+                            <!-- Kekuatan Profil -->
+                            <div class="profile-status-card">
+                                <h6 class="profile-status-title mb-3">Kelengkapan Profil</h6>
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" id="profileStrengthBar" style="width: 25%"></div>
+                                </div>
+                                <p class="profile-status-desc mb-3">Lengkapi profil perusahaan untuk menarik lebih banyak kandidat.</p>
+                                <button class="btn btn-add-section">
+                                    <i class="bi bi-plus-circle me-2"></i>Lengkapi Profil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Profile Modal -->
+                    <div class="modal fade" id="editProfileModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Profil Perusahaan</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
                                     <form id="profileForm">
+                                        <h6 class="fw-bold mb-3">Informasi Pribadi</h6>
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label for="profileFullName" class="form-label">Nama Lengkap</label>
-                                                <input type="text" class="form-control" id="profileFullName" required>
+                                                <input type="text" class="form-control" id="profileFullName" maxlength="100" required>
+                                                <small class="text-muted float-end"><span id="profileFullNameCounter">0/100</span></small>
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="profileUsername" class="form-label">Username</label>
-                                                <input type="text" class="form-control" id="profileUsername" required>
+                                                <input type="text" class="form-control" id="profileUsername" maxlength="50" required>
+                                                <small class="text-muted float-end"><span id="profileUsernameCounter">0/50</span></small>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -205,38 +395,182 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="profilePhone" class="form-label">Nomor Telepon</label>
-                                                <input type="tel" class="form-control" id="profilePhone">
+                                                <input type="tel" class="form-control" id="profilePhone" maxlength="20">
+                                                <small class="text-muted float-end"><span id="profilePhoneCounter">0/20</span></small>
+                                            </div>
+                                        </div>
+                                        <hr class="my-4">
+                                        <h6 class="fw-bold mb-3">Informasi Perusahaan</h6>
+                                        <div class="mb-3">
+                                            <label for="profileCompany" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="profileCompany" maxlength="100" required>
+                                            <small class="text-muted float-end"><span id="profileCompanyCounter">0/100</span></small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="profileAddress" class="form-label">Alamat Perusahaan</label>
+                                            <textarea class="form-control" id="profileAddress" rows="3" maxlength="500"></textarea>
+                                            <small class="text-muted float-end"><span id="profileAddressCounter">0/500</span></small>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="profileCompanyWebsite" class="form-label">Website Perusahaan</label>
+                                                <input type="url" class="form-control" id="profileCompanyWebsite" placeholder="https://..." maxlength="200">
+                                                <small class="text-muted float-end"><span id="profileCompanyWebsiteCounter">0/200</span></small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="profileCompanyIndustry" class="form-label">Industri</label>
+                                                <input type="text" class="form-control" id="profileCompanyIndustry" placeholder="Contoh: Teknologi, Manufaktur, dll" maxlength="50">
+                                                <small class="text-muted float-end"><span id="profileCompanyIndustryCounter">0/50</span></small>
                                             </div>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="profileCompany" class="form-label">Nama Perusahaan</label>
-                                            <input type="text" class="form-control" id="profileCompany">
+                                            <label for="profileCompanySize" class="form-label">Ukuran Perusahaan</label>
+                                            <select class="form-select" id="profileCompanySize">
+                                                <option value="">Pilih Ukuran</option>
+                                                <option value="1-10">1-10 karyawan</option>
+                                                <option value="11-50">11-50 karyawan</option>
+                                                <option value="51-200">51-200 karyawan</option>
+                                                <option value="201-500">201-500 karyawan</option>
+                                                <option value="501-1000">501-1000 karyawan</option>
+                                                <option value="1000+">1000+ karyawan</option>
+                                            </select>
                                         </div>
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="cancelProfileEdit()">Batal</button>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-save me-2"></i>Simpan Perubahan
-                                            </button>
+                                        <div class="mb-3">
+                                            <label for="profileCompanyLinkedIn" class="form-label">LinkedIn Perusahaan</label>
+                                            <input type="url" class="form-control" id="profileCompanyLinkedIn" placeholder="https://linkedin.com/company/..." maxlength="200">
+                                            <small class="text-muted float-end"><span id="profileCompanyLinkedInCounter">0</span>/200</small>
                                         </div>
                                     </form>
                                 </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveProfile()">
+                                        <i class="bi bi-save me-2"></i>Simpan Perubahan
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-white">
-                                    <h5 class="mb-0 fw-bold">Foto Profil</h5>
+                    </div>
+
+                    <!-- Company About Modal -->
+                    <div class="modal fade" id="companyAboutModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="companyAboutModalTitle">Tambah Deskripsi Perusahaan</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <img src="https://ui-avatars.com/api/?name=HRD&size=150&background=1A3D64&color=fff" 
-                                             alt="Profile" 
-                                             class="rounded-circle" 
-                                             id="profileImage"
-                                             style="width: 150px; height: 150px; object-fit: cover;">
-                                    </div>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-camera me-2"></i>Ubah Foto
+                                <div class="modal-body">
+                                    <form id="companyAboutForm">
+                                        <div class="mb-3">
+                                            <label for="companyAbout" class="form-label">Deskripsi Perusahaan</label>
+                                            <textarea class="form-control" id="companyAbout" rows="8" placeholder="Ceritakan tentang perusahaan Anda, sejarah, nilai-nilai, dan budaya perusahaan..." maxlength="2000"></textarea>
+                                            <small class="text-muted float-end"><span id="companyAboutCounter">0/2000</span></small>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveCompanyAbout()">
+                                        <i class="bi bi-save me-2"></i>Simpan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vision Mission Modal -->
+                    <div class="modal fade" id="visionMissionModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="visionMissionModalTitle">Tambah Visi & Misi</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="visionMissionForm">
+                                        <div class="mb-3">
+                                            <label for="companyVision" class="form-label">Visi Perusahaan</label>
+                                            <textarea class="form-control" id="companyVision" rows="4" placeholder="Tulis visi perusahaan Anda..." maxlength="1000"></textarea>
+                                            <small class="text-muted float-end"><span id="companyVisionCounter">0/1000</span></small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="companyMission" class="form-label">Misi Perusahaan</label>
+                                            <textarea class="form-control" id="companyMission" rows="4" placeholder="Tulis misi perusahaan Anda..." maxlength="1000"></textarea>
+                                            <small class="text-muted float-end"><span id="companyMissionCounter">0/1000</span></small>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-primary" onclick="saveVisionMission()">
+                                        <i class="bi bi-save me-2"></i>Simpan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Info Modal (CRUD) -->
+                    <div class="modal fade" id="companyInfoModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="companyInfoModalTitle">Tambah Informasi Perusahaan</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="companyInfoForm">
+                                        <div class="mb-3">
+                                            <label for="companyInfoName" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="companyInfoName" maxlength="100" required>
+                                            <small class="text-muted float-end"><span id="companyInfoNameCounter">0/100</span></small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="companyInfoAddress" class="form-label">Alamat Perusahaan</label>
+                                            <textarea class="form-control" id="companyInfoAddress" rows="3" placeholder="Alamat lengkap perusahaan..." maxlength="500"></textarea>
+                                            <small class="text-muted float-end"><span id="companyInfoAddressCounter">0/500</span></small>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="companyInfoWebsite" class="form-label">Website Perusahaan</label>
+                                                <input type="url" class="form-control" id="companyInfoWebsite" placeholder="https://www.example.com" maxlength="200">
+                                                <small class="text-muted float-end"><span id="companyInfoWebsiteCounter">0/200</span></small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="companyInfoIndustry" class="form-label">Industri</label>
+                                                <input type="text" class="form-control" id="companyInfoIndustry" placeholder="Contoh: Teknologi, Manufaktur, Retail, dll" maxlength="50">
+                                                <small class="text-muted float-end"><span id="companyInfoIndustryCounter">0/50</span></small>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="companyInfoSize" class="form-label">Ukuran Perusahaan</label>
+                                                <select class="form-select" id="companyInfoSize">
+                                                    <option value="">Pilih Ukuran</option>
+                                                    <option value="1-10">1-10 karyawan</option>
+                                                    <option value="11-50">11-50 karyawan</option>
+                                                    <option value="51-200">51-200 karyawan</option>
+                                                    <option value="201-500">201-500 karyawan</option>
+                                                    <option value="501-1000">501-1000 karyawan</option>
+                                                    <option value="1000+">1000+ karyawan</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="companyInfoLinkedIn" class="form-label">LinkedIn Perusahaan</label>
+                                                <input type="url" class="form-control" id="companyInfoLinkedIn" placeholder="https://linkedin.com/company/..." maxlength="200">
+                                                <small class="text-muted float-end"><span id="companyInfoLinkedInCounter">0/200</span></small>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-danger" id="deleteCompanyInfoBtn" onclick="confirmDeleteCompanyInfo()" style="display: none;">
+                                        <i class="bi bi-trash me-2"></i>Hapus
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="saveCompanyInfo()">
+                                        <i class="bi bi-save me-2"></i>Simpan
                                     </button>
                                 </div>
                             </div>
@@ -293,16 +627,19 @@
                         <input type="hidden" id="jobId">
                         <div class="mb-3">
                             <label for="jobTitle" class="form-label">Judul Pekerjaan</label>
-                            <input type="text" class="form-control" id="jobTitle" required>
+                            <input type="text" class="form-control" id="jobTitle" maxlength="100" required>
+                            <small class="text-muted float-end"><span id="jobTitleCounter">0/100</span></small>
                         </div>
                         <div class="mb-3">
                             <label for="jobCompany" class="form-label">Nama Perusahaan</label>
-                            <input type="text" class="form-control" id="jobCompany" required>
+                            <input type="text" class="form-control" id="jobCompany" maxlength="100" required>
+                            <small class="text-muted float-end"><span id="jobCompanyCounter">0/100</span></small>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="jobLocation" class="form-label">Lokasi</label>
-                                <input type="text" class="form-control" id="jobLocation" required>
+                                <input type="text" class="form-control" id="jobLocation" maxlength="100" required>
+                                <small class="text-muted float-end"><span id="jobLocationCounter">0/100</span></small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="jobCategory" class="form-label">Kategori</label>
@@ -339,11 +676,13 @@
                         </div>
                         <div class="mb-3">
                             <label for="jobDescription" class="form-label">Deskripsi Pekerjaan</label>
-                            <textarea class="form-control" id="jobDescription" rows="5" required></textarea>
+                            <textarea class="form-control" id="jobDescription" rows="5" maxlength="2000" required></textarea>
+                            <small class="text-muted float-end"><span id="jobDescriptionCounter">0/2000</span></small>
                         </div>
                         <div class="mb-3">
                             <label for="jobRequirements" class="form-label">Persyaratan</label>
-                            <textarea class="form-control" id="jobRequirements" rows="5" required></textarea>
+                            <textarea class="form-control" id="jobRequirements" rows="5" maxlength="2000" required></textarea>
+                            <small class="text-muted float-end"><span id="jobRequirementsCounter">0/2000</span></small>
                         </div>
                     </form>
                 </div>
@@ -358,12 +697,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <script src="../js/supabase-init.js"></script>
-    <script src="../js/modules/auth.js"></script>
-    <script src="../js/main.js"></script>
-    <script src="../js/modules/jobs.js"></script>
-    <script src="../js/modules/applications.js"></script>
-    <script src="../js/dashboard-hrd.js"></script>
+    <script src="/js/supabase-init.js"></script>
+    <script src="/js/modules/auth.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/modules/jobs.js"></script>
+    <script src="/js/modules/applications.js"></script>
+    <script src="/js/dashboard-hrd.js"></script>
 </body>
 </html>
 

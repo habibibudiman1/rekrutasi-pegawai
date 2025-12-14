@@ -66,15 +66,37 @@ npm install
 
 ### 6. Jalankan Aplikasi
 
-Untuk development:
+Untuk development (Recommended):
 ```bash
 npm run dev
 ```
+Server akan berjalan di `http://localhost:3000`. 
+
+**PENTING:** Buka browser dan akses:
+- `http://localhost:3000/` → Homepage (index.html)
+- `http://localhost:3000/index.html` → Homepage
+- `http://localhost:3000/login.html` → Login
+- `http://localhost:3000/register.html` → Register
+- `http://localhost:3000/jobs.html` → Daftar Lowongan
+- `http://localhost:3000/dashboard-pelamar.html` → Dashboard Pelamar
+- `http://localhost:3000/dashboard-hrd.html` → Dashboard HRD
+
+**Catatan:** 
+- Server berjalan dari folder `frontend/pages/`
+- Root URL (`/`) langsung menunjuk ke `index.html`
+- Semua path CSS/JS menggunakan relative paths (`../css/` dan `../js/`)
+- `http://localhost:3000/dashboard-hrd.html` → Dashboard HRD
+- dll.
+
+**Catatan:**
+- Server berjalan dari folder `frontend/pages/`, jadi root URL (`/`) langsung menunjuk ke folder `pages/`
+- Path CSS/JS (`../css/style.css` dan `../js/...`) bekerja dengan benar karena relatif dari `frontend/pages/` ke `frontend/css/` dan `frontend/js/`
+- Link antar halaman di HTML menggunakan path relatif (`login.html`, `jobs.html`, dll.) yang benar karena semua file ada di folder yang sama
 
 Atau gunakan live server lainnya seperti:
 - VS Code Live Server extension
-- Python: `python -m http.server 8000`
-- PHP: `php -S localhost:8000`
+- Python: `python -m http.server 8000` (dari folder `frontend/pages`)
+- PHP: `php -S localhost:8000` (dari folder `frontend/pages`)
 
 ### 7. Verifikasi HRD (Manual)
 

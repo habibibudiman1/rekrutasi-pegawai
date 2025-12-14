@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup event listeners
     setupEventListeners();
     setupProfileForm();
+    setupCharacterCounters();
 });
 
 function setupNavigation() {
@@ -164,22 +165,679 @@ async function loadProfile() {
     const profile = await authManager.getCurrentUserProfile();
     console.log('Profile data:', profile);
     if (profile) {
+        // Update profile header
+        const companyName = profile.company_name || profile.full_name || 'Nama Perusahaan';
+        document.getElementById('profileHeaderCompanyName').textContent = companyName;
+        document.getElementById('profileHeaderLocation').textContent = profile.address || 'Lokasi Perusahaan';
+        document.getElementById('profileHeaderEmail').textContent = authManager.currentUser?.email || 'email@perusahaan.com';
+        
+        // Update profile image/logo
+        const initials = companyName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=200&background=1A3D64&color=fff`;
+        document.getElementById('profileHeaderImage').src = avatarUrl;
+        
+        // Update form fields
         document.getElementById('profileFullName').value = profile.full_name || '';
         document.getElementById('profileUsername').value = profile.username || '';
         document.getElementById('profileEmail').value = authManager.currentUser?.email || '';
         document.getElementById('profilePhone').value = profile.phone || '';
         document.getElementById('profileCompany').value = profile.company_name || '';
+        document.getElementById('profileAddress').value = profile.address || '';
+        document.getElementById('profileCompanyWebsite').value = profile.portfolio_url || '';
+        document.getElementById('profileCompanyLinkedIn').value = profile.linkedin_url || '';
         
-        // Update profile image
-        if (profile.full_name) {
-            const initials = profile.full_name.split(' ').map(n => n[0]).join('').substring(0, 2);
-            document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=150&background=1A3D64&color=fff`;
+        // Load company about
+        if (profile.bio && !profile.bio.includes('VISI:')) {
+            document.getElementById('companyAboutText').textContent = profile.bio;
+            document.getElementById('companyAboutContent').style.display = 'block';
+            document.getElementById('addCompanyAboutBtn').style.display = 'none';
+        } else {
+            document.getElementById('companyAboutContent').style.display = 'none';
+            document.getElementById('addCompanyAboutBtn').style.display = 'block';
         }
+        
+        // Load vision & mission
+        if (profile.bio && profile.bio.includes('VISI:')) {
+            const parts = profile.bio.split('MISI:');
+            const vision = parts[0].replace('VISI:', '').trim();
+            const mission = parts[1] ? parts[1].trim() : '';
+            document.getElementById('visionMissionText').innerHTML = `
+                <div class="mb-3">
+                    <strong>Visi:</strong>
+                    <p>${vision}</p>
+                </div>
+                <div>
+                    <strong>Misi:</strong>
+                    <p>${mission}</p>
+                </div>
+            `;
+            document.getElementById('visionMissionContent').style.display = 'block';
+            document.getElementById('addVisionMissionBtn').style.display = 'none';
+        } else {
+            document.getElementById('visionMissionContent').style.display = 'none';
+            document.getElementById('addVisionMissionBtn').style.display = 'block';
+        }
+        
+        // Update contact info sidebar
+        document.getElementById('contactEmail').textContent = authManager.currentUser?.email || '-';
+        document.getElementById('contactPhone').textContent = profile.phone || '-';
+        document.getElementById('contactAddress').textContent = profile.address || '-';
+        
+        // Update verification status
+        const verificationStatus = document.getElementById('verificationStatus');
+        if (profile.is_verified) {
+            verificationStatus.textContent = 'Terverifikasi';
+            verificationStatus.className = 'profile-status-value mb-2 text-success';
+            document.getElementById('verifyCompanyBtn').style.display = 'none';
+        } else {
+            verificationStatus.textContent = 'Belum Terverifikasi';
+            verificationStatus.className = 'profile-status-value mb-2 text-warning';
+            document.getElementById('verifyCompanyBtn').style.display = 'block';
+        }
+        
+        // Calculate profile completeness
+        calculateProfileCompleteness(profile);
+        
+        // Load company info display
+        loadCompanyInfo(profile);
     }
+}
+
+function calculateProfileCompleteness(profile) {
+    let completed = 0;
+    let total = 7;
+    
+    if (profile.company_name) completed++;
+    if (profile.full_name) completed++;
+    if (profile.phone) completed++;
+    if (profile.address) completed++;
+    if (profile.bio) completed++;
+    if (profile.linkedin_url || profile.portfolio_url) completed++;
+    if (profile.is_verified) completed++;
+    
+    const percentage = Math.round((completed / total) * 100);
+    document.getElementById('profileStrengthBar').style.width = percentage + '%';
 }
 
 function cancelProfileEdit() {
     loadProfile();
+}
+
+// ============================================
+// CHARACTER COUNTER FUNCTIONS
+// ============================================
+
+function setupCharacterCounters() {
+    // Define all fields with their counter IDs and max lengths
+    const fields = [
+        { inputId: 'profileFullName', counterId: 'profileFullNameCounter', maxLength: 100 },
+        { inputId: 'profileUsername', counterId: 'profileUsernameCounter', maxLength: 50 },
+        { inputId: 'profilePhone', counterId: 'profilePhoneCounter', maxLength: 20 },
+        { inputId: 'profileCompany', counterId: 'profileCompanyCounter', maxLength: 100 },
+        { inputId: 'profileAddress', counterId: 'profileAddressCounter', maxLength: 500 },
+        { inputId: 'profileCompanyWebsite', counterId: 'profileCompanyWebsiteCounter', maxLength: 200 },
+        { inputId: 'profileCompanyIndustry', counterId: 'profileCompanyIndustryCounter', maxLength: 50 },
+        { inputId: 'profileCompanyLinkedIn', counterId: 'profileCompanyLinkedInCounter', maxLength: 200 },
+        { inputId: 'companyAbout', counterId: 'companyAboutCounter', maxLength: 2000 },
+        { inputId: 'companyVision', counterId: 'companyVisionCounter', maxLength: 1000 },
+        { inputId: 'companyMission', counterId: 'companyMissionCounter', maxLength: 1000 },
+        { inputId: 'companyInfoName', counterId: 'companyInfoNameCounter', maxLength: 100 },
+        { inputId: 'companyInfoAddress', counterId: 'companyInfoAddressCounter', maxLength: 500 },
+        { inputId: 'companyInfoWebsite', counterId: 'companyInfoWebsiteCounter', maxLength: 200 },
+        { inputId: 'companyInfoIndustry', counterId: 'companyInfoIndustryCounter', maxLength: 50 },
+        { inputId: 'companyInfoLinkedIn', counterId: 'companyInfoLinkedInCounter', maxLength: 200 },
+        { inputId: 'jobTitle', counterId: 'jobTitleCounter', maxLength: 100 },
+        { inputId: 'jobCompany', counterId: 'jobCompanyCounter', maxLength: 100 },
+        { inputId: 'jobLocation', counterId: 'jobLocationCounter', maxLength: 100 },
+        { inputId: 'jobDescription', counterId: 'jobDescriptionCounter', maxLength: 2000 },
+        { inputId: 'jobRequirements', counterId: 'jobRequirementsCounter', maxLength: 2000 },
+    ];
+    
+    // Setup counter for each field
+    fields.forEach(field => {
+        const input = document.getElementById(field.inputId);
+        const counter = document.getElementById(field.counterId);
+        
+        if (input && counter) {
+            // Check if listener already exists (avoid duplicates)
+            if (!input.dataset.counterSetup) {
+                // Update counter on input
+                input.addEventListener('input', () => {
+                    updateCharacterCounter(input, counter, field.maxLength);
+                });
+                
+                // Update counter on focus (for edit mode)
+                input.addEventListener('focus', () => {
+                    updateCharacterCounter(input, counter, field.maxLength);
+                });
+                
+                // Mark as setup
+                input.dataset.counterSetup = 'true';
+            }
+            
+            // Initial update
+            updateCharacterCounter(input, counter, field.maxLength);
+        }
+    });
+}
+
+function updateCharacterCounter(input, counter, maxLength) {
+    if (!input || !counter) return;
+    
+    const currentLength = input.value.length;
+    counter.textContent = `${currentLength}/${maxLength}`;
+    
+    // Get parent small element
+    const parentSmall = counter.parentElement;
+    
+    // Change color if approaching limit
+    if (currentLength >= maxLength * 0.9) {
+        parentSmall.classList.add('text-danger');
+        parentSmall.classList.remove('text-muted', 'text-warning');
+    } else if (currentLength >= maxLength * 0.75) {
+        parentSmall.classList.add('text-warning');
+        parentSmall.classList.remove('text-danger', 'text-muted');
+    } else {
+        parentSmall.classList.remove('text-danger', 'text-warning');
+        parentSmall.classList.add('text-muted');
+    }
+}
+
+// Company About Functions
+function addCompanyAbout() {
+    const modal = new bootstrap.Modal(document.getElementById('companyAboutModal'));
+    document.getElementById('companyAboutModalTitle').textContent = 'Tambah Deskripsi Perusahaan';
+    document.getElementById('companyAbout').value = '';
+    
+    // Update counter
+    setTimeout(() => {
+        const input = document.getElementById('companyAbout');
+        const counter = document.getElementById('companyAboutCounter');
+        if (input && counter) {
+            updateCharacterCounter(input, counter, 2000);
+        }
+    }, 100);
+    
+    modal.show();
+}
+
+async function editCompanyAbout() {
+    const modal = new bootstrap.Modal(document.getElementById('companyAboutModal'));
+    document.getElementById('companyAboutModalTitle').textContent = 'Edit Deskripsi Perusahaan';
+    
+    // Load existing about text
+    try {
+        const profile = await authManager.getCurrentUserProfile();
+        if (profile && profile.bio && !profile.bio.includes('VISI:')) {
+            document.getElementById('companyAbout').value = profile.bio;
+        } else {
+            document.getElementById('companyAbout').value = '';
+        }
+    } catch (error) {
+        console.error('Error loading company about:', error);
+        const currentText = document.getElementById('companyAboutText')?.textContent || '';
+        document.getElementById('companyAbout').value = currentText;
+    }
+    
+    // Update counter
+    setTimeout(() => {
+        const input = document.getElementById('companyAbout');
+        const counter = document.getElementById('companyAboutCounter');
+        if (input && counter) {
+            updateCharacterCounter(input, counter, 2000);
+        }
+    }, 100);
+    
+    modal.show();
+}
+
+async function saveCompanyAbout() {
+    const aboutText = document.getElementById('companyAbout').value.trim();
+    if (!aboutText) {
+        showAlert('Deskripsi perusahaan tidak boleh kosong', 'warning');
+        return;
+    }
+    
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        // Get current profile to preserve vision & mission if exists
+        const { data: currentProfile } = await supabaseClient
+            .from('user_profiles')
+            .select('bio')
+            .eq('id', authManager.currentUser.id)
+            .single();
+        
+        let bioToSave = aboutText;
+        
+        // If vision & mission exists, preserve it
+        if (currentProfile?.bio && currentProfile.bio.includes('VISI:')) {
+            // Keep vision & mission, replace only the about part
+            // For simplicity, we'll store about separately or combine them
+            // For now, we'll just save the about text
+            // In a real app, you might want separate fields
+            bioToSave = aboutText;
+        }
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update({ bio: bioToSave })
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Deskripsi perusahaan berhasil disimpan!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('companyAboutModal')).hide();
+        await loadProfile();
+    } catch (error) {
+        console.error('Error saving company about:', error);
+        showAlert('Gagal menyimpan deskripsi: ' + error.message, 'danger');
+    }
+}
+
+// DELETE - Delete company about
+async function deleteCompanyAbout() {
+    if (!confirm('Apakah Anda yakin ingin menghapus deskripsi perusahaan?')) {
+        return;
+    }
+    
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        // Get current profile to preserve vision & mission if exists
+        const { data: currentProfile } = await supabaseClient
+            .from('user_profiles')
+            .select('bio')
+            .eq('id', authManager.currentUser.id)
+            .single();
+        
+        let bioToSave = null;
+        
+        // If vision & mission exists, preserve it
+        if (currentProfile?.bio && currentProfile.bio.includes('VISI:')) {
+            // Keep only vision & mission
+            bioToSave = currentProfile.bio;
+        } else {
+            // Delete all bio
+            bioToSave = null;
+        }
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update({ bio: bioToSave })
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Deskripsi perusahaan berhasil dihapus!', 'success');
+        await loadProfile();
+    } catch (error) {
+        console.error('Error deleting company about:', error);
+        showAlert('Gagal menghapus deskripsi: ' + error.message, 'danger');
+    }
+}
+
+// Vision & Mission Functions
+function addVisionMission() {
+    const modal = new bootstrap.Modal(document.getElementById('visionMissionModal'));
+    document.getElementById('visionMissionModalTitle').textContent = 'Tambah Visi & Misi';
+    document.getElementById('companyVision').value = '';
+    document.getElementById('companyMission').value = '';
+    
+    // Update counters
+    setTimeout(() => {
+        const visionInput = document.getElementById('companyVision');
+        const visionCounter = document.getElementById('companyVisionCounter');
+        const missionInput = document.getElementById('companyMission');
+        const missionCounter = document.getElementById('companyMissionCounter');
+        if (visionInput && visionCounter) {
+            updateCharacterCounter(visionInput, visionCounter, 1000);
+        }
+        if (missionInput && missionCounter) {
+            updateCharacterCounter(missionInput, missionCounter, 1000);
+        }
+    }, 100);
+    
+    modal.show();
+}
+
+async function editVisionMission() {
+    const modal = new bootstrap.Modal(document.getElementById('visionMissionModal'));
+    document.getElementById('visionMissionModalTitle').textContent = 'Edit Visi & Misi';
+    
+    // Load existing vision & mission
+    try {
+        const profile = await authManager.getCurrentUserProfile();
+        if (profile && profile.bio && profile.bio.includes('VISI:')) {
+            const parts = profile.bio.split('MISI:');
+            const vision = parts[0].replace('VISI:', '').trim();
+            const mission = parts[1] ? parts[1].trim() : '';
+            document.getElementById('companyVision').value = vision;
+            document.getElementById('companyMission').value = mission;
+        } else {
+            document.getElementById('companyVision').value = '';
+            document.getElementById('companyMission').value = '';
+        }
+    } catch (error) {
+        console.error('Error loading vision mission:', error);
+        document.getElementById('companyVision').value = '';
+        document.getElementById('companyMission').value = '';
+    }
+    
+    // Update counters
+    setTimeout(() => {
+        const visionInput = document.getElementById('companyVision');
+        const visionCounter = document.getElementById('companyVisionCounter');
+        const missionInput = document.getElementById('companyMission');
+        const missionCounter = document.getElementById('companyMissionCounter');
+        if (visionInput && visionCounter) {
+            updateCharacterCounter(visionInput, visionCounter, 1000);
+        }
+        if (missionInput && missionCounter) {
+            updateCharacterCounter(missionInput, missionCounter, 1000);
+        }
+    }, 100);
+    
+    modal.show();
+}
+
+async function saveVisionMission() {
+    const vision = document.getElementById('companyVision').value.trim();
+    const mission = document.getElementById('companyMission').value.trim();
+    
+    if (!vision && !mission) {
+        showAlert('Visi atau Misi harus diisi', 'warning');
+        return;
+    }
+    
+    // Store as formatted text in bio
+    const visionMissionText = `VISI:\n${vision}\n\nMISI:\n${mission}`;
+    
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        // Get current profile to preserve company about if exists
+        const { data: currentProfile } = await supabaseClient
+            .from('user_profiles')
+            .select('bio')
+            .eq('id', authManager.currentUser.id)
+            .single();
+        
+        // If there's existing about text (without VISI:), we'll replace it with vision & mission
+        // In a real app, you might want separate fields for about, vision, and mission
+        let bioToSave = visionMissionText;
+        
+        // If there's existing about that's not vision/mission, we could combine them
+        // For now, we'll just save vision & mission
+        if (currentProfile?.bio && !currentProfile.bio.includes('VISI:')) {
+            // Option: Combine them or replace
+            // For simplicity, we'll replace with vision & mission
+            bioToSave = visionMissionText;
+        }
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update({ bio: bioToSave })
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Visi & Misi berhasil disimpan!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('visionMissionModal')).hide();
+        await loadProfile();
+    } catch (error) {
+        console.error('Error saving vision mission:', error);
+        showAlert('Gagal menyimpan visi & misi: ' + error.message, 'danger');
+    }
+}
+
+// DELETE - Delete vision & mission
+async function deleteVisionMission() {
+    if (!confirm('Apakah Anda yakin ingin menghapus visi & misi perusahaan?')) {
+        return;
+    }
+    
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        // Get current profile to preserve company about if exists
+        const { data: currentProfile } = await supabaseClient
+            .from('user_profiles')
+            .select('bio')
+            .eq('id', authManager.currentUser.id)
+            .single();
+        
+        let bioToSave = null;
+        
+        // If there's existing about text (without VISI:), preserve it
+        if (currentProfile?.bio && !currentProfile.bio.includes('VISI:')) {
+            bioToSave = currentProfile.bio;
+        } else {
+            // Delete all bio
+            bioToSave = null;
+        }
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update({ bio: bioToSave })
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Visi & Misi berhasil dihapus!', 'success');
+        await loadProfile();
+    } catch (error) {
+        console.error('Error deleting vision mission:', error);
+        showAlert('Gagal menghapus visi & misi: ' + error.message, 'danger');
+    }
+}
+
+function editContactInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+    modal.show();
+}
+
+// ============================================
+// CRUD FUNCTIONS FOR COMPANY INFO
+// ============================================
+
+function loadCompanyInfo(profile) {
+    if (!profile) return;
+    
+    // Check if company has any info
+    const hasCompanyInfo = profile.company_name || 
+                          profile.address || 
+                          profile.portfolio_url || 
+                          profile.linkedin_url;
+    
+    if (hasCompanyInfo) {
+        // Display company info
+        document.getElementById('displayCompanyName').textContent = profile.company_name || '-';
+        document.getElementById('displayCompanyIndustry').textContent = 'Belum diisi'; // Can be stored in separate field
+        document.getElementById('displayCompanySize').textContent = 'Belum diisi'; // Can be stored in separate field
+        document.getElementById('displayCompanyAddress').textContent = profile.address || '-';
+        
+        // Website
+        const websiteEl = document.getElementById('displayCompanyWebsite');
+        if (profile.portfolio_url) {
+            websiteEl.textContent = profile.portfolio_url;
+            websiteEl.href = profile.portfolio_url;
+            websiteEl.style.display = 'inline';
+        } else {
+            websiteEl.textContent = '-';
+            websiteEl.href = '#';
+            websiteEl.style.display = 'none';
+        }
+        
+        // LinkedIn
+        const linkedInEl = document.getElementById('displayCompanyLinkedIn');
+        if (profile.linkedin_url) {
+            linkedInEl.textContent = profile.linkedin_url;
+            linkedInEl.href = profile.linkedin_url;
+            linkedInEl.style.display = 'inline';
+        } else {
+            linkedInEl.textContent = '-';
+            linkedInEl.href = '#';
+            linkedInEl.style.display = 'none';
+        }
+        
+        // Show display, hide add button
+        document.getElementById('companyInfoDisplay').style.display = 'block';
+        document.getElementById('addCompanyInfoBtn').style.display = 'none';
+    } else {
+        // Hide display, show add button
+        document.getElementById('companyInfoDisplay').style.display = 'none';
+        document.getElementById('addCompanyInfoBtn').style.display = 'block';
+    }
+}
+
+// CREATE - Add new company info
+async function addCompanyInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('companyInfoModal'));
+    document.getElementById('companyInfoModalTitle').textContent = 'Tambah Informasi Perusahaan';
+    document.getElementById('deleteCompanyInfoBtn').style.display = 'none';
+    
+    // Clear form
+    document.getElementById('companyInfoForm').reset();
+    
+    // Pre-fill with existing data if any
+    try {
+        const profile = await authManager.getCurrentUserProfile();
+        if (profile) {
+            document.getElementById('companyInfoName').value = profile.company_name || '';
+            document.getElementById('companyInfoAddress').value = profile.address || '';
+            document.getElementById('companyInfoWebsite').value = profile.portfolio_url || '';
+            document.getElementById('companyInfoLinkedIn').value = profile.linkedin_url || '';
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+    
+    // Update counters after setting values
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
+    
+    modal.show();
+}
+
+// READ & UPDATE - Edit existing company info
+async function editCompanyInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('companyInfoModal'));
+    document.getElementById('companyInfoModalTitle').textContent = 'Edit Informasi Perusahaan';
+    document.getElementById('deleteCompanyInfoBtn').style.display = 'inline-block';
+    
+    try {
+        const profile = await authManager.getCurrentUserProfile();
+        if (profile) {
+            document.getElementById('companyInfoName').value = profile.company_name || '';
+            document.getElementById('companyInfoAddress').value = profile.address || '';
+            document.getElementById('companyInfoWebsite').value = profile.portfolio_url || '';
+            document.getElementById('companyInfoLinkedIn').value = profile.linkedin_url || '';
+            document.getElementById('companyInfoIndustry').value = ''; // Store in separate field if needed
+            document.getElementById('companyInfoSize').value = ''; // Store in separate field if needed
+        }
+    } catch (error) {
+        console.error('Error loading company info:', error);
+    }
+    
+    // Update counters after setting values
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
+    
+    modal.show();
+}
+
+// CREATE/UPDATE - Save company info
+async function saveCompanyInfo() {
+    const form = document.getElementById('companyInfoForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const companyName = document.getElementById('companyInfoName').value.trim();
+    if (!companyName) {
+        showAlert('Nama perusahaan wajib diisi', 'warning');
+        return;
+    }
+    
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        const companyData = {
+            company_name: companyName,
+            address: document.getElementById('companyInfoAddress').value.trim(),
+            portfolio_url: document.getElementById('companyInfoWebsite').value.trim(),
+            linkedin_url: document.getElementById('companyInfoLinkedIn').value.trim(),
+        };
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update(companyData)
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Informasi perusahaan berhasil disimpan!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('companyInfoModal')).hide();
+        
+        // Reload profile to update display
+        await loadProfile();
+    } catch (error) {
+        console.error('Error saving company info:', error);
+        showAlert('Gagal menyimpan informasi perusahaan: ' + error.message, 'danger');
+    }
+}
+
+// DELETE - Delete company info
+function confirmDeleteCompanyInfo() {
+    if (!confirm('Apakah Anda yakin ingin menghapus semua informasi perusahaan?\n\nData yang dihapus tidak dapat dikembalikan.')) {
+        return;
+    }
+    deleteCompanyInfo();
+}
+
+async function deleteCompanyInfo() {
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
+        
+        // Clear company info fields
+        const companyData = {
+            company_name: null,
+            address: null,
+            portfolio_url: null,
+            linkedin_url: null,
+        };
+        
+        const { error } = await supabaseClient
+            .from('user_profiles')
+            .update(companyData)
+            .eq('id', authManager.currentUser.id);
+        
+        if (error) throw error;
+        
+        showAlert('Informasi perusahaan berhasil dihapus!', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('companyInfoModal')).hide();
+        
+        // Reload profile to update display
+        await loadProfile();
+    } catch (error) {
+        console.error('Error deleting company info:', error);
+        showAlert('Gagal menghapus informasi perusahaan: ' + error.message, 'danger');
+    }
+}
+
+// Legacy function - redirect to add
+function openCompanyInfoModal() {
+    addCompanyInfo();
 }
 
 // Handle profile form submission
@@ -203,7 +861,16 @@ function setupProfileForm() {
                     username: document.getElementById('profileUsername').value,
                     phone: document.getElementById('profilePhone').value,
                     company_name: document.getElementById('profileCompany').value,
+                    address: document.getElementById('profileAddress').value,
+                    portfolio_url: document.getElementById('profileCompanyWebsite').value,
+                    linkedin_url: document.getElementById('profileCompanyLinkedIn').value,
                 };
+                
+                // Also update company info if fields exist
+                const companyInfoName = document.getElementById('companyInfoName');
+                if (companyInfoName && companyInfoName.value) {
+                    profileData.company_name = companyInfoName.value;
+                }
                 
                 const { error } = await supabaseClient
                     .from('user_profiles')
@@ -216,6 +883,13 @@ function setupProfileForm() {
                 
                 // Update user name in header
                 document.getElementById('userName').textContent = profileData.full_name || profileData.username;
+                
+                // Reload profile to update header and sidebar
+                await loadProfile();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                if (modal) modal.hide();
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showAlert('Gagal memperbarui profil: ' + error.message, 'danger');
@@ -548,6 +1222,11 @@ function openJobModal(jobId = null) {
         form.reset();
         document.getElementById('jobId').value = '';
     }
+    
+    // Update counters after modal is shown
+    setTimeout(() => {
+        setupCharacterCounters();
+    }, 100);
     
     modal.show();
 }

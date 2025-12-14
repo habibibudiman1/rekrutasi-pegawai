@@ -7,7 +7,7 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <!-- Header -->
@@ -235,9 +235,6 @@
                                         <span id="profileHeaderEmail">habibi.budiman321@gmail.com</span>
                                     </span>
                                 </div>
-                                <button class="btn btn-edit-profile" id="editProfileBtn">
-                                    <i class="bi bi-pencil me-2"></i>Ubah
-                                </button>
                             </div>
                             <div class="profile-header-decorations">
                                 <div class="decoration-circle decoration-blue"></div>
@@ -361,11 +358,13 @@
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label for="profileFullName" class="form-label">Nama Lengkap</label>
-                                                <input type="text" class="form-control" id="profileFullName" required>
+                                                <input type="text" class="form-control" id="profileFullName" maxlength="100" required>
+                                                <small class="text-muted float-end"><span id="profileFullNameCounter">0/100</span></small>
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="profileUsername" class="form-label">Username</label>
-                                                <input type="text" class="form-control" id="profileUsername" required>
+                                                <input type="text" class="form-control" id="profileUsername" maxlength="50" required>
+                                                <small class="text-muted float-end"><span id="profileUsernameCounter">0/50</span></small>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -376,25 +375,30 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="profilePhone" class="form-label">Nomor Telepon</label>
-                                                <input type="tel" class="form-control" id="profilePhone">
+                                                <input type="tel" class="form-control" id="profilePhone" maxlength="20">
+                                                <small class="text-muted float-end"><span id="profilePhoneCounter">0/20</span></small>
                                             </div>
                                         </div>
                                         <div class="mb-3">
                                             <label for="profileAddress" class="form-label">Alamat</label>
-                                            <textarea class="form-control" id="profileAddress" rows="3"></textarea>
+                                            <textarea class="form-control" id="profileAddress" rows="3" maxlength="500"></textarea>
+                                            <small class="text-muted float-end"><span id="profileAddressCounter">0/500</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="profileBio" class="form-label">Deskripsi Diri</label>
-                                            <textarea class="form-control" id="profileBio" rows="4" placeholder="Tulis deskripsi diri, tujuan, dan motivasi Anda..."></textarea>
+                                            <textarea class="form-control" id="profileBio" rows="4" placeholder="Tulis deskripsi diri, tujuan, dan motivasi Anda..." maxlength="2000"></textarea>
+                                            <small class="text-muted float-end"><span id="profileBioCounter">0/2000</span></small>
                                         </div>
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <label for="profileLinkedIn" class="form-label">LinkedIn URL</label>
-                                                <input type="url" class="form-control" id="profileLinkedIn" placeholder="https://linkedin.com/in/...">
+                                                <input type="url" class="form-control" id="profileLinkedIn" placeholder="https://linkedin.com/in/..." maxlength="200">
+                                                <small class="text-muted float-end"><span id="profileLinkedInCounter">0/200</span></small>
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="profilePortfolio" class="form-label">Portfolio URL</label>
-                                                <input type="url" class="form-control" id="profilePortfolio" placeholder="https://...">
+                                                <input type="url" class="form-control" id="profilePortfolio" placeholder="https://..." maxlength="200">
+                                                <small class="text-muted float-end"><span id="profilePortfolioCounter">0/200</span></small>
                                             </div>
                                         </div>
                                     </form>
@@ -422,15 +426,18 @@
                                         <input type="hidden" id="careerId">
                                         <div class="mb-3">
                                             <label for="careerJobTitle" class="form-label">Jabatan <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="careerJobTitle" required>
+                                            <input type="text" class="form-control" id="careerJobTitle" maxlength="100" required>
+                                            <small class="text-muted float-end"><span id="careerJobTitleCounter">0/100</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="careerCompany" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="careerCompany" required>
+                                            <input type="text" class="form-control" id="careerCompany" maxlength="100" required>
+                                            <small class="text-muted float-end"><span id="careerCompanyCounter">0/100</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="careerLocation" class="form-label">Lokasi</label>
-                                            <input type="text" class="form-control" id="careerLocation">
+                                            <input type="text" class="form-control" id="careerLocation" maxlength="100">
+                                            <small class="text-muted float-end"><span id="careerLocationCounter">0/100</span></small>
                                         </div>
                                         <div class="row mb-3">
                                             <div class="col-md-6">
@@ -452,7 +459,8 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="careerDescription" class="form-label">Deskripsi</label>
-                                            <textarea class="form-control" id="careerDescription" rows="4" placeholder="Jelaskan tanggung jawab dan pencapaian Anda..."></textarea>
+                                            <textarea class="form-control" id="careerDescription" rows="4" placeholder="Jelaskan tanggung jawab dan pencapaian Anda..." maxlength="2000"></textarea>
+                                            <small class="text-muted float-end"><span id="careerDescriptionCounter">0/2000</span></small>
                                         </div>
                                     </form>
                                 </div>
@@ -479,15 +487,18 @@
                                         <input type="hidden" id="educationId">
                                         <div class="mb-3">
                                             <label for="educationInstitution" class="form-label">Nama Institusi <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="educationInstitution" required>
+                                            <input type="text" class="form-control" id="educationInstitution" maxlength="200" required>
+                                            <small class="text-muted float-end"><span id="educationInstitutionCounter">0/200</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="educationDegree" class="form-label">Gelar <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="educationDegree" placeholder="Contoh: S1 Teknik Informatika" required>
+                                            <input type="text" class="form-control" id="educationDegree" placeholder="Contoh: S1 Teknik Informatika" maxlength="100" required>
+                                            <small class="text-muted float-end"><span id="educationDegreeCounter">0/100</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="educationField" class="form-label">Bidang Studi</label>
-                                            <input type="text" class="form-control" id="educationField" placeholder="Contoh: Teknik Informatika">
+                                            <input type="text" class="form-control" id="educationField" placeholder="Contoh: Teknik Informatika" maxlength="100">
+                                            <small class="text-muted float-end"><span id="educationFieldCounter">0/100</span></small>
                                         </div>
                                         <div class="row mb-3">
                                             <div class="col-md-6">
@@ -509,7 +520,8 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="educationDescription" class="form-label">Deskripsi</label>
-                                            <textarea class="form-control" id="educationDescription" rows="3" placeholder="Informasi tambahan tentang pendidikan Anda..."></textarea>
+                                            <textarea class="form-control" id="educationDescription" rows="3" placeholder="Informasi tambahan tentang pendidikan Anda..." maxlength="1000"></textarea>
+                                            <small class="text-muted float-end"><span id="educationDescriptionCounter">0/1000</span></small>
                                         </div>
                                     </form>
                                 </div>
@@ -536,11 +548,13 @@
                                         <input type="hidden" id="licenseId">
                                         <div class="mb-3">
                                             <label for="licenseName" class="form-label">Nama Lisensi/Sertifikat <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="licenseName" required>
+                                            <input type="text" class="form-control" id="licenseName" maxlength="200" required>
+                                            <small class="text-muted float-end"><span id="licenseNameCounter">0/200</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="licenseOrganization" class="form-label">Organisasi Penerbit <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="licenseOrganization" required>
+                                            <input type="text" class="form-control" id="licenseOrganization" maxlength="200" required>
+                                            <small class="text-muted float-end"><span id="licenseOrganizationCounter">0/200</span></small>
                                         </div>
                                         <div class="row mb-3">
                                             <div class="col-md-6">
@@ -554,11 +568,13 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="licenseCredentialId" class="form-label">ID Kredensial</label>
-                                            <input type="text" class="form-control" id="licenseCredentialId" placeholder="Nomor sertifikat atau ID">
+                                            <input type="text" class="form-control" id="licenseCredentialId" placeholder="Nomor sertifikat atau ID" maxlength="100">
+                                            <small class="text-muted float-end"><span id="licenseCredentialIdCounter">0/100</span></small>
                                         </div>
                                         <div class="mb-3">
                                             <label for="licenseCredentialUrl" class="form-label">URL Kredensial</label>
-                                            <input type="url" class="form-control" id="licenseCredentialUrl" placeholder="https://...">
+                                            <input type="url" class="form-control" id="licenseCredentialUrl" placeholder="https://..." maxlength="200">
+                                            <small class="text-muted float-end"><span id="licenseCredentialUrlCounter">0/200</span></small>
                                         </div>
                                     </form>
                                 </div>
@@ -609,12 +625,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="../js/supabase-init.js"></script>
-    <script src="../js/modules/auth.js"></script>
-    <script src="../js/main.js"></script>
-    <script src="../js/modules/jobs.js"></script>
-    <script src="../js/modules/applications.js"></script>
-    <script src="../js/dashboard-pelamar.js"></script>
+    <script src="/js/supabase-init.js"></script>
+    <script src="/js/modules/auth.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/modules/jobs.js"></script>
+    <script src="/js/modules/applications.js"></script>
+    <script src="/js/dashboard-pelamar.js"></script>
 </body>
 </html>
 

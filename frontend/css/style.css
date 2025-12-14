@@ -133,6 +133,35 @@ a:hover {
     background-color: var(--gray-100);
 }
 
+/* Ensure button in navbar has white text */
+.navbar .nav-link.btn-primary,
+.navbar .nav-link.btn-primary.text-white,
+.navbar-nav .nav-link.btn-primary,
+.navbar-nav .nav-link.btn-primary.text-white {
+    color: var(--white) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.navbar .nav-link.btn-primary:hover,
+.navbar .nav-link.btn-primary.text-white:hover,
+.navbar-nav .nav-link.btn-primary:hover,
+.navbar-nav .nav-link.btn-primary.text-white:hover {
+    color: var(--white) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+}
+
+.navbar .nav-link.btn-primary:focus,
+.navbar .nav-link.btn-primary.text-white:focus,
+.navbar-nav .nav-link.btn-primary:focus,
+.navbar-nav .nav-link.btn-primary.text-white:focus {
+    color: var(--white) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(26, 61, 100, 0.25) !important;
+}
+
 .nav-link.active {
     color: var(--primary-color) !important;
     background-color: rgba(26, 61, 100, 0.1);
@@ -150,7 +179,10 @@ a:hover {
 /* ========== Hero Section ========== */
 .hero-section {
     position: relative;
-    background: linear-gradient(135deg, var(--palette-dark-blue) 0%, var(--palette-blue) 50%, var(--palette-teal) 100%);
+    background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1920');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -995,11 +1027,11 @@ footer .list-unstyled li {
         min-height: auto;
         padding: 3rem 0;
     }
-    
+
     .hero-section h1 {
         font-size: 2rem;
     }
-    
+
     .hero-section p {
         font-size: 1rem;
     }
@@ -1562,4 +1594,76 @@ footer .list-unstyled li {
         margin-top: 1rem;
         justify-content: flex-end;
     }
+}
+
+/* ========== Character Counter Styles ========== */
+/* Counter untuk input fields (di kanan) */
+input.form-control + small.text-muted.float-end {
+    display: block;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    text-align: right;
+    line-height: 1.2;
+}
+
+input.form-control + small.text-muted.float-end span {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+input.form-control + small.text-muted.float-end.text-danger {
+    color: #dc3545;
+}
+
+input.form-control + small.text-muted.float-end.text-danger span {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+input.form-control + small.text-muted.float-end.text-warning {
+    color: #ffc107;
+}
+
+input.form-control + small.text-muted.float-end.text-warning span {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+/* Counter untuk textarea (di kanan) */
+textarea.form-control + small.text-muted.float-end {
+    display: block;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    text-align: right;
+    line-height: 1.2;
+}
+
+textarea.form-control + small.text-muted.float-end span {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+textarea.form-control + small.text-muted.float-end.text-danger {
+    color: #dc3545;
+}
+
+textarea.form-control + small.text-muted.float-end.text-danger span {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+textarea.form-control + small.text-muted.float-end.text-warning {
+    color: #ffc107;
+}
+
+textarea.form-control + small.text-muted.float-end.text-warning span {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+/* Ensure textarea is resizable */
+textarea.form-control {
+    resize: vertical;
 }

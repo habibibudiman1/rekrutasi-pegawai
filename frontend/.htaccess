@@ -1,0 +1,9 @@
+# Apache configuration untuk redirect root ke pages/index.html
+# Jika menggunakan Apache server
+
+# Redirect root ke pages/index.html
+RewriteEngine On
+RewriteRule ^$ /pages/index.html [R=301,L]
+
+# Fallback untuk file yang tidak ditemukan
+ErrorDocument 404 /pages/index.html

@@ -1,5 +1,40 @@
 // Main JavaScript for general functionality
 
+// Suppress non-critical errors (WebSocket from Live Server, source maps, etc.)
+window.addEventListener('error', (event) => {
+    // Suppress WebSocket errors from Live Server (any port)
+    if (event.message && (
+        event.message.includes('WebSocket') || 
+        event.message.includes('ws://') ||
+        event.message.includes('reload.js')
+    )) {
+        event.preventDefault();
+        return false;
+    }
+    // Suppress 404 errors for source maps and non-existent resources
+    if (event.filename && (
+        event.filename.includes('pages:1') ||
+        event.filename.includes('.map') ||
+        event.filename.includes('cv.html') ||
+        event.filename.includes('reload.js')
+    )) {
+        event.preventDefault();
+        return false;
+    }
+}, true);
+
+// Suppress unhandled promise rejections for WebSocket
+window.addEventListener('unhandledrejection', (event) => {
+    if (event.reason && (
+        event.reason.toString().includes('WebSocket') ||
+        event.reason.toString().includes('ws://') ||
+        event.reason.toString().includes('reload.js')
+    )) {
+        event.preventDefault();
+        return false;
+    }
+});
+
 // Check authentication status and redirect if needed
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for Supabase to be ready

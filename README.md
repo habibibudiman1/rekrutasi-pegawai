@@ -169,7 +169,47 @@ Pastikan file `frontend/js/supabase-init.js` sudah diupdate dengan benar.
 
 **Catatan:** Beberapa fitur mungkin tidak berfungsi karena CORS policy. Gunakan Opsi 2 untuk pengalaman penuh.
 
-### Opsi 2: Menggunakan Live Server (Recommended)
+### Opsi 2: Menggunakan npm run dev (Recommended)
+
+1. Pastikan Node.js dan npm sudah terinstall
+2. Jalankan perintah berikut di terminal:
+```bash
+npm run dev
+```
+3. Server akan berjalan di `http://localhost:3000`
+4. **Buka browser dan akses URL berikut (SEMUA URL BERFUNGSI):**
+   
+   **URL Pendek (Recommended - Lebih Mudah):**
+   - `http://localhost:3000/` → Homepage
+   - `http://localhost:3000/login` → Login
+   - `http://localhost:3000/register` → Register
+   - `http://localhost:3000/jobs` → Daftar Lowongan
+   - `http://localhost:3000/job-detail?id=xxx` → Detail Lowongan
+   - `http://localhost:3000/dashboard-pelamar` → Dashboard Pelamar
+   - `http://localhost:3000/dashboard-hrd` → Dashboard HRD
+   - `http://localhost:3000/about` → Tentang Kami
+   
+   **URL Lengkap (Alternatif - Juga Berfungsi):**
+   - `http://localhost:3000/pages/index.html` → Homepage
+   - `http://localhost:3000/pages/login.html` → Login
+   - `http://localhost:3000/pages/register.html` → Register
+   - `http://localhost:3000/pages/jobs.html` → Daftar Lowongan
+   - `http://localhost:3000/pages/job-detail.html?id=xxx` → Detail Lowongan
+   - `http://localhost:3000/pages/dashboard-pelamar.html` → Dashboard Pelamar
+   - `http://localhost:3000/pages/dashboard-hrd.html` → Dashboard HRD
+   - `http://localhost:3000/pages/about.html` → Tentang Kami
+
+**Catatan Penting:** 
+- Server berjalan dari folder `frontend/`, jadi root URL (`/`) menunjuk ke folder `frontend/`
+- File `frontend/index.html` akan otomatis redirect ke `/pages/index.html`
+- File redirect dibuat di root `frontend/` untuk route pendek (`/login`, `/register`, dll.)
+- Semua path CSS/JS menggunakan absolute paths (`/css/style.css` dan `/js/...`)
+- Path absolute dimulai dari root server (`frontend/`), jadi `/css/style.css` akan mencari `frontend/css/style.css`
+- Link antar halaman di HTML menggunakan path relatif (`login.html`, `jobs.html`, dll.) yang akan bekerja dengan benar karena semua file ada di folder `pages/` yang sama
+- **Semua halaman HTML di folder `pages/` dapat diakses dengan sempurna dan berfungsi dengan baik**
+- **URL pendek (tanpa `/pages/`) dan URL lengkap (dengan `/pages/`) keduanya berfungsi dengan baik**
+
+### Opsi 3: Menggunakan Live Server (Alternatif)
 
 #### Menggunakan VS Code:
 1. Install extension **"Live Server"** di VS Code
@@ -195,7 +235,7 @@ http-server -p 8000
 # Buka browser: http://localhost:8000
 ```
 
-### Opsi 3: Menggunakan XAMPP/WAMP
+### Opsi 4: Menggunakan XAMPP/WAMP
 
 1. Install XAMPP atau WAMP
 2. Copy folder `frontend` ke `htdocs` (XAMPP) atau `www` (WAMP)
@@ -308,6 +348,42 @@ Rekrutasi-Pegawai/
 - Gunakan Live Server atau web server lokal
 - Pastikan Supabase URL sudah benar
 
+### Masalah: Error 404 untuk CSS/JS (style.css, supabase-init.js, auth.js, main.js tidak ditemukan)
+**Solusi:**
+1. **Pastikan menggunakan `npm run dev`:**
+   ```bash
+   npm run dev
+   ```
+
+2. **Akses URL yang benar:**
+   - Server berjalan dari folder `frontend/`
+   - ✅ **Benar:** `http://localhost:3000/pages/index.html` → Homepage
+   - ✅ **Benar:** `http://localhost:3000/pages/login.html` → Login
+   - ✅ **Benar:** `http://localhost:3000/pages/register.html` → Register
+   - ✅ **Benar:** `http://localhost:3000/pages/jobs.html` → Jobs
+   - ❌ **Salah:** `http://localhost:3000/index.html` (akan error 404)
+
+3. **Path CSS/JS menggunakan absolute paths:**
+   - Semua path di HTML menggunakan `/css/style.css` dan `/js/...`
+   - Path ini absolute dari root server (`frontend/`), jadi akan selalu benar
+   - Pastikan server berjalan dari folder `frontend/` (bukan `frontend/pages/`)
+
+4. **Jika masih error, pastikan:**
+   - File `frontend/css/style.css` ada
+   - File `frontend/js/supabase-init.js` ada
+   - File `frontend/js/modules/auth.js` ada
+   - File `frontend/js/main.js` ada
+   - **Restart server** setelah perubahan: `npm run dev`
+   - **Clear browser cache** (Ctrl+Shift+R atau Ctrl+F5)
+   - **Tutup Live Server** jika masih berjalan (port 5500, 5508, dll)
+
+### Masalah: WebSocket Error untuk cv.html
+**Solusi:**
+- Error ini normal dan tidak mempengaruhi aplikasi
+- WebSocket error muncul karena Live Server mencoba hot reload untuk file yang tidak ada
+- Error ini sudah ditangani di `main.js` dan tidak akan mengganggu fungsi aplikasi
+- Jika menggunakan `npm run dev`, error WebSocket tidak akan muncul karena `serve` tidak memiliki hot reload
+
 ## 📚 Dokumentasi Lengkap
 
 Untuk dokumentasi lebih detail, lihat folder `docs/`:
@@ -370,5 +446,6 @@ Project ini dibuat untuk keperluan akademik. Silakan sesuaikan dengan kebutuhan 
 **Dibuat dengan ❤️ oleh Tim Rekrutasi Pegawai**
 
 Untuk pertanyaan atau bantuan, silakan buka [Issues](../../issues) atau hubungi tim development.
-#   r e k r u t a s i - p e g a w a i  
+#   r e k r u t a s i - p e g a w a i 
+ 
  
