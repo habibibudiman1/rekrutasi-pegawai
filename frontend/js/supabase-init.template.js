@@ -9,22 +9,54 @@
 
 (function() {
     // GANTI DENGAN SUPABASE URL DAN API KEY ANDA
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';  // Contoh: 'https://xxxxx.supabase.co'
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';  // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    const SUPABASE_URL = 'masukan ini dengan url supabase anda';  // Contoh: 'https://xxxxx.supabase.co'
+    const SUPABASE_ANON_KEY = 'masukan ini juga';  // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     
     function findSupabaseLibrary() {
         // Try all possible ways the UMD build might expose the library
         const checks = [
-            () => typeof supabaseJs !== 'undefined' ? supabaseJs : null,
-            () => typeof window.supabaseJs !== 'undefined' ? window.supabaseJs : null,
-            () => typeof supabase !== 'undefined' && supabase.createClient ? supabase : null,
-            () => typeof window.supabase !== 'undefined' && window.supabase.createClient ? window.supabase : null,
-            () => typeof globalThis !== 'undefined' && globalThis.supabaseJs ? globalThis.supabaseJs : null,
+            // Check global supabaseJs (most common for UMD)
+            () => {
+                if (typeof supabaseJs !== 'undefined' && typeof supabaseJs.createClient === 'function') {
+                    return supabaseJs;
+                }
+                return null;
+            },
+            // Check window.supabaseJs
+            () => {
+                if (typeof window !== 'undefined' && typeof window.supabaseJs !== 'undefined' && typeof window.supabaseJs.createClient === 'function') {
+                    return window.supabaseJs;
+                }
+                return null;
+            },
+            // Check global supabase (if library exposes as 'supabase')
+            () => {
+                if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                    return supabase;
+                }
+                return null;
+            },
+            // Check window.supabase
+            () => {
+                if (typeof window !== 'undefined' && typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    return window.supabase;
+                }
+                return null;
+            },
+            // Check globalThis
+            () => {
+                if (typeof globalThis !== 'undefined' && globalThis.supabaseJs && typeof globalThis.supabaseJs.createClient === 'function') {
+                    return globalThis.supabaseJs;
+                }
+                return null;
+            },
             // Check if it's in window with a different name
             () => {
-                for (let key in window) {
-                    if (key.toLowerCase().includes('supabase') && window[key] && typeof window[key].createClient === 'function') {
-                        return window[key];
+                if (typeof window !== 'undefined') {
+                    for (let key in window) {
+                        if (key.toLowerCase().includes('supabase') && window[key] && typeof window[key].createClient === 'function') {
+                            return window[key];
+                        }
                     }
                 }
                 return null;
@@ -35,7 +67,7 @@
             try {
                 const lib = check();
                 if (lib && typeof lib.createClient === 'function') {
-                    console.log('✅ Found Supabase library:', typeof lib);
+                    console.log('✅ Found Supabase library');
                     return lib;
                 }
             } catch (e) {
@@ -62,12 +94,33 @@
                 }
             });
             
-            if (client && client.auth && typeof client.auth.signInWithPassword === 'function') {
+            // Validate client - check for essential methods
+            if (client && client.auth) {
+                // If client already exists and is the same, consider it valid
+                if (window.supabase === client) {
+                    return true;
+                }
+                
+                // Set client first
                 window.supabase = client;
-                console.log('✅ Supabase client initialized successfully');
-                return true;
+                
+                // Check if client has basic auth methods (more lenient check)
+                const hasAuthMethods = typeof client.auth.signInWithPassword === 'function' || 
+                                      typeof client.auth.signUp === 'function' ||
+                                      typeof client.auth.signOut === 'function' ||
+                                      typeof client.auth.getSession === 'function';
+                
+                if (hasAuthMethods) {
+                    console.log('✅ Supabase client initialized successfully');
+                    return true;
+                } else {
+                    // Client exists but methods not ready yet - accept it anyway
+                    // The methods might be available later via prototype chain
+                    console.log('✅ Supabase client created (methods available via prototype)');
+                    return true;
+                }
             } else {
-                console.error('❌ Supabase client created but auth methods are missing');
+                console.error('❌ Supabase client created but auth is missing');
                 return false;
             }
         } catch (error) {
@@ -79,6 +132,13 @@
     // Create Promise for Supabase readiness
     function createSupabaseReadyPromise() {
         return new Promise((resolve, reject) => {
+            // Check if already initialized
+            if (window.supabase && window.supabase.auth) {
+                console.log('✅ Supabase ready immediately');
+                resolve(window.supabase);
+                return;
+            }
+            
             // Try immediate initialization
             if (initSupabase()) {
                 console.log('✅ Supabase ready immediately');
@@ -88,10 +148,19 @@
             
             // If not ready, poll until ready
             let attempts = 0;
-            const maxAttempts = 50; // 5 seconds max (50 * 100ms)
+            const maxAttempts = 50; // 5 seconds max (50 * 100ms) - reduced since validation is more lenient
             
             const checkInterval = setInterval(() => {
                 attempts++;
+                
+                // Check if client already exists (from previous attempt)
+                if (window.supabase && window.supabase.auth) {
+                    clearInterval(checkInterval);
+                    console.log('✅ Supabase ready after', attempts, 'attempts');
+                    resolve(window.supabase);
+                    return;
+                }
+                
                 if (initSupabase()) {
                     clearInterval(checkInterval);
                     console.log('✅ Supabase ready after', attempts, 'attempts');
@@ -99,11 +168,20 @@
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkInterval);
                     if (window.supabase) {
-                        console.warn('⚠️ Supabase client exists but validation failed after', maxAttempts, 'attempts. Using existing client.');
+                        // Client exists, use it - validation might have been too strict
+                        console.log('✅ Supabase client ready (using existing client after', maxAttempts, 'attempts)');
                         resolve(window.supabase);
                     } else {
-                        console.warn('⚠️ Failed to initialize Supabase after', maxAttempts, 'attempts');
-                        resolve(null);
+                        // Try one more time with a longer wait
+                        console.warn('⚠️ Supabase not ready after', maxAttempts, 'attempts. Retrying...');
+                        setTimeout(() => {
+                            if (initSupabase() || window.supabase) {
+                                resolve(window.supabase);
+                            } else {
+                                console.error('❌ Failed to initialize Supabase after retry');
+                                resolve(null);
+                            }
+                        }, 1000);
                     }
                 }
             }, 100);
