@@ -161,9 +161,31 @@ function showPage(page) {
 }
 
 async function loadProfile() {
-    console.log('loadProfile called');
-    const profile = await authManager.getCurrentUserProfile();
-    console.log('Profile data:', profile);
+    // Force refresh by querying directly from database to bypass cache
+    let profile = null;
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (supabaseClient && authManager.currentUser) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authManager.currentUser.id)
+                .maybeSingle();
+            
+            if (!error && data) {
+                profile = data;
+            } else if (error) {
+                // Fallback to authManager method
+                profile = await authManager.getCurrentUserProfile();
+            }
+        } else {
+            // Fallback to authManager method
+            profile = await authManager.getCurrentUserProfile();
+        }
+    } catch (error) {
+        // Fallback to authManager method
+        profile = await authManager.getCurrentUserProfile();
+    }
     if (profile) {
         // Update profile header
         const companyName = profile.company_name || profile.full_name || 'Nama Perusahaan';
@@ -407,7 +429,7 @@ async function saveCompanyAbout() {
             .from('user_profiles')
             .select('bio')
             .eq('id', authManager.currentUser.id)
-            .single();
+            .maybeSingle();
         
         let bioToSave = aboutText;
         
@@ -420,19 +442,42 @@ async function saveCompanyAbout() {
             bioToSave = aboutText;
         }
         
-        const { error } = await supabaseClient
+        const { data: updatedData, error } = await supabaseClient
             .from('user_profiles')
-            .update({ bio: bioToSave })
-            .eq('id', authManager.currentUser.id);
+            .update({ bio: bioToSave, updated_at: new Date().toISOString() })
+            .eq('id', authManager.currentUser.id)
+            .select()
+            .single();
         
         if (error) throw error;
         
-        showAlert('Deskripsi perusahaan berhasil disimpan!', 'success');
+        if (!updatedData) {
+            throw new Error('Data tidak ter-update');
+        }
+        
+        // Close modal
         bootstrap.Modal.getInstance(document.getElementById('companyAboutModal')).hide();
-        await loadProfile();
+        
+        // Show success message
+        showAlert('Deskripsi perusahaan berhasil disimpan!', 'success');
+        
+        // Update UI directly
+        const companyAboutTextEl = document.getElementById('companyAboutText');
+        const companyAboutContentEl = document.getElementById('companyAboutContent');
+        const addCompanyAboutBtnEl = document.getElementById('addCompanyAboutBtn');
+        
+        if (updatedData.bio && !updatedData.bio.includes('VISI:')) {
+            if (companyAboutTextEl) companyAboutTextEl.textContent = updatedData.bio;
+            if (companyAboutContentEl) companyAboutContentEl.style.display = 'block';
+            if (addCompanyAboutBtnEl) addCompanyAboutBtnEl.style.display = 'none';
+        } else {
+            if (companyAboutContentEl) companyAboutContentEl.style.display = 'none';
+            if (addCompanyAboutBtnEl) addCompanyAboutBtnEl.style.display = 'block';
+        }
+        
     } catch (error) {
         console.error('Error saving company about:', error);
-        showAlert('Gagal menyimpan deskripsi: ' + error.message, 'danger');
+        showAlert('Gagal menyimpan deskripsi: ' + (error.message || 'Terjadi kesalahan'), 'danger');
     }
 }
 
@@ -564,7 +609,7 @@ async function saveVisionMission() {
             .from('user_profiles')
             .select('bio')
             .eq('id', authManager.currentUser.id)
-            .single();
+            .maybeSingle();
         
         // If there's existing about text (without VISI:), we'll replace it with vision & mission
         // In a real app, you might want separate fields for about, vision, and mission
@@ -578,19 +623,56 @@ async function saveVisionMission() {
             bioToSave = visionMissionText;
         }
         
-        const { error } = await supabaseClient
+        const { data: updatedData, error } = await supabaseClient
             .from('user_profiles')
-            .update({ bio: bioToSave })
-            .eq('id', authManager.currentUser.id);
+            .update({ bio: bioToSave, updated_at: new Date().toISOString() })
+            .eq('id', authManager.currentUser.id)
+            .select()
+            .single();
         
         if (error) throw error;
         
-        showAlert('Visi & Misi berhasil disimpan!', 'success');
+        if (!updatedData) {
+            throw new Error('Data tidak ter-update');
+        }
+        
+        // Close modal
         bootstrap.Modal.getInstance(document.getElementById('visionMissionModal')).hide();
-        await loadProfile();
+        
+        // Show success message
+        showAlert('Visi & Misi berhasil disimpan!', 'success');
+        
+        // Update UI directly
+        const visionMissionTextEl = document.getElementById('visionMissionText');
+        const visionMissionContentEl = document.getElementById('visionMissionContent');
+        const addVisionMissionBtnEl = document.getElementById('addVisionMissionBtn');
+        
+        if (updatedData.bio && updatedData.bio.includes('VISI:')) {
+            const parts = updatedData.bio.split('MISI:');
+            const visionPart = parts[0].replace('VISI:', '').trim();
+            const missionPart = parts[1] ? parts[1].trim() : '';
+            if (visionMissionTextEl) {
+                visionMissionTextEl.innerHTML = `
+                    <div class="mb-3">
+                        <strong>Visi:</strong>
+                        <p>${visionPart}</p>
+                    </div>
+                    <div>
+                        <strong>Misi:</strong>
+                        <p>${missionPart}</p>
+                    </div>
+                `;
+            }
+            if (visionMissionContentEl) visionMissionContentEl.style.display = 'block';
+            if (addVisionMissionBtnEl) addVisionMissionBtnEl.style.display = 'none';
+        } else {
+            if (visionMissionContentEl) visionMissionContentEl.style.display = 'none';
+            if (addVisionMissionBtnEl) addVisionMissionBtnEl.style.display = 'block';
+        }
+        
     } catch (error) {
         console.error('Error saving vision mission:', error);
-        showAlert('Gagal menyimpan visi & misi: ' + error.message, 'danger');
+        showAlert('Gagal menyimpan visi & misi: ' + (error.message || 'Terjadi kesalahan'), 'danger');
     }
 }
 
@@ -646,7 +728,17 @@ function editContactInfo() {
 // ============================================
 
 function loadCompanyInfo(profile) {
-    if (!profile) return;
+    if (!profile) {
+        console.warn('loadCompanyInfo: No profile provided');
+        return;
+    }
+    
+    console.log('loadCompanyInfo called with:', {
+        company_name: profile.company_name,
+        address: profile.address,
+        portfolio_url: profile.portfolio_url,
+        linkedin_url: profile.linkedin_url
+    });
     
     // Check if company has any info
     const hasCompanyInfo = profile.company_name || 
@@ -656,42 +748,99 @@ function loadCompanyInfo(profile) {
     
     if (hasCompanyInfo) {
         // Display company info
-        document.getElementById('displayCompanyName').textContent = profile.company_name || '-';
-        document.getElementById('displayCompanyIndustry').textContent = 'Belum diisi'; // Can be stored in separate field
-        document.getElementById('displayCompanySize').textContent = 'Belum diisi'; // Can be stored in separate field
-        document.getElementById('displayCompanyAddress').textContent = profile.address || '-';
+        const nameEl = document.getElementById('displayCompanyName');
+        const addressEl = document.getElementById('displayCompanyAddress');
+        const websiteEl = document.getElementById('displayCompanyWebsite');
+        const linkedInEl = document.getElementById('displayCompanyLinkedIn');
+        
+        if (nameEl) {
+            nameEl.textContent = profile.company_name || '-';
+            console.log('Updated displayCompanyName:', profile.company_name);
+        } else {
+            console.error('displayCompanyName element not found!');
+        }
+        
+        if (addressEl) {
+            addressEl.textContent = profile.address || '-';
+            console.log('Updated displayCompanyAddress:', profile.address);
+        } else {
+            console.error('displayCompanyAddress element not found!');
+        }
+        
+        // Extract company metadata from bio if exists
+        let companyMetadata = {};
+        if (profile.bio && profile.bio.includes('COMPANY_METADATA:')) {
+            try {
+                const parts = profile.bio.split('COMPANY_METADATA:');
+                const metadataJson = parts[1].trim();
+                companyMetadata = JSON.parse(metadataJson);
+            } catch (e) {
+                console.warn('Error parsing company metadata:', e);
+            }
+        }
+        
+        // Industry and Size - load from metadata or use fallback
+        const industryEl = document.getElementById('displayCompanyIndustry');
+        const sizeEl = document.getElementById('displayCompanySize');
+        if (industryEl) {
+            industryEl.textContent = companyMetadata.industry || profile.company_industry || 'Belum diisi';
+            console.log('Updated displayCompanyIndustry:', companyMetadata.industry || profile.company_industry);
+        }
+        if (sizeEl) {
+            sizeEl.textContent = companyMetadata.size || profile.company_size || 'Belum diisi';
+            console.log('Updated displayCompanySize:', companyMetadata.size || profile.company_size);
+        }
         
         // Website
-        const websiteEl = document.getElementById('displayCompanyWebsite');
-        if (profile.portfolio_url) {
-            websiteEl.textContent = profile.portfolio_url;
-            websiteEl.href = profile.portfolio_url;
-            websiteEl.style.display = 'inline';
+        if (websiteEl) {
+            if (profile.portfolio_url) {
+                websiteEl.textContent = profile.portfolio_url;
+                websiteEl.href = profile.portfolio_url;
+                websiteEl.style.display = 'inline';
+                console.log('Updated displayCompanyWebsite:', profile.portfolio_url);
+            } else {
+                websiteEl.textContent = '-';
+                websiteEl.href = '#';
+                websiteEl.style.display = 'none';
+            }
         } else {
-            websiteEl.textContent = '-';
-            websiteEl.href = '#';
-            websiteEl.style.display = 'none';
+            console.error('displayCompanyWebsite element not found!');
         }
         
         // LinkedIn
-        const linkedInEl = document.getElementById('displayCompanyLinkedIn');
-        if (profile.linkedin_url) {
-            linkedInEl.textContent = profile.linkedin_url;
-            linkedInEl.href = profile.linkedin_url;
-            linkedInEl.style.display = 'inline';
+        if (linkedInEl) {
+            if (profile.linkedin_url) {
+                linkedInEl.textContent = profile.linkedin_url;
+                linkedInEl.href = profile.linkedin_url;
+                linkedInEl.style.display = 'inline';
+                console.log('Updated displayCompanyLinkedIn:', profile.linkedin_url);
+            } else {
+                linkedInEl.textContent = '-';
+                linkedInEl.href = '#';
+                linkedInEl.style.display = 'none';
+            }
         } else {
-            linkedInEl.textContent = '-';
-            linkedInEl.href = '#';
-            linkedInEl.style.display = 'none';
+            console.error('displayCompanyLinkedIn element not found!');
         }
         
         // Show display, hide add button
-        document.getElementById('companyInfoDisplay').style.display = 'block';
-        document.getElementById('addCompanyInfoBtn').style.display = 'none';
+        const displayEl = document.getElementById('companyInfoDisplay');
+        const addBtn = document.getElementById('addCompanyInfoBtn');
+        if (displayEl) {
+            displayEl.style.display = 'block';
+            console.log('Company info display shown');
+        } else {
+            console.error('companyInfoDisplay element not found!');
+        }
+        if (addBtn) {
+            addBtn.style.display = 'none';
+        }
     } else {
         // Hide display, show add button
-        document.getElementById('companyInfoDisplay').style.display = 'none';
-        document.getElementById('addCompanyInfoBtn').style.display = 'block';
+        const displayEl = document.getElementById('companyInfoDisplay');
+        const addBtn = document.getElementById('addCompanyInfoBtn');
+        if (displayEl) displayEl.style.display = 'none';
+        if (addBtn) addBtn.style.display = 'block';
     }
 }
 
@@ -704,14 +853,49 @@ async function addCompanyInfo() {
     // Clear form
     document.getElementById('companyInfoForm').reset();
     
-    // Pre-fill with existing data if any
+    // Pre-fill with existing data if any (load fresh from database)
     try {
-        const profile = await authManager.getCurrentUserProfile();
+        const supabaseClient = authManager.getSupabaseClient();
+        let profile = null;
+        
+        if (supabaseClient && authManager.currentUser) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authManager.currentUser.id)
+                .maybeSingle();
+            
+            if (!error && data) {
+                profile = data;
+            }
+        }
+        
+        // Fallback to authManager if direct query fails
+        if (!profile) {
+            profile = await authManager.getCurrentUserProfile();
+        }
+        
         if (profile) {
             document.getElementById('companyInfoName').value = profile.company_name || '';
             document.getElementById('companyInfoAddress').value = profile.address || '';
             document.getElementById('companyInfoWebsite').value = profile.portfolio_url || '';
             document.getElementById('companyInfoLinkedIn').value = profile.linkedin_url || '';
+            
+            // Extract company metadata from bio if exists
+            let companyMetadata = {};
+            if (profile.bio && profile.bio.includes('COMPANY_METADATA:')) {
+                try {
+                    const parts = profile.bio.split('COMPANY_METADATA:');
+                    const metadataJson = parts[1].trim();
+                    companyMetadata = JSON.parse(metadataJson);
+                } catch (e) {
+                    console.warn('Error parsing company metadata:', e);
+                }
+            }
+            
+            // Load industry and size from metadata or profile
+            document.getElementById('companyInfoIndustry').value = companyMetadata.industry || profile.company_industry || '';
+            document.getElementById('companyInfoSize').value = companyMetadata.size || profile.company_size || '';
         }
     } catch (error) {
         console.error('Error loading profile:', error);
@@ -732,14 +916,48 @@ async function editCompanyInfo() {
     document.getElementById('deleteCompanyInfoBtn').style.display = 'inline-block';
     
     try {
-        const profile = await authManager.getCurrentUserProfile();
+        // Load fresh data from database
+        const supabaseClient = authManager.getSupabaseClient();
+        let profile = null;
+        
+        if (supabaseClient && authManager.currentUser) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authManager.currentUser.id)
+                .maybeSingle();
+            
+            if (!error && data) {
+                profile = data;
+            }
+        }
+        
+        // Fallback to authManager if direct query fails
+        if (!profile) {
+            profile = await authManager.getCurrentUserProfile();
+        }
+        
         if (profile) {
             document.getElementById('companyInfoName').value = profile.company_name || '';
             document.getElementById('companyInfoAddress').value = profile.address || '';
             document.getElementById('companyInfoWebsite').value = profile.portfolio_url || '';
             document.getElementById('companyInfoLinkedIn').value = profile.linkedin_url || '';
-            document.getElementById('companyInfoIndustry').value = ''; // Store in separate field if needed
-            document.getElementById('companyInfoSize').value = ''; // Store in separate field if needed
+            
+            // Extract company metadata from bio if exists
+            let companyMetadata = {};
+            if (profile.bio && profile.bio.includes('COMPANY_METADATA:')) {
+                try {
+                    const parts = profile.bio.split('COMPANY_METADATA:');
+                    const metadataJson = parts[1].trim();
+                    companyMetadata = JSON.parse(metadataJson);
+                } catch (e) {
+                    console.warn('Error parsing company metadata:', e);
+                }
+            }
+            
+            // Load industry and size from metadata or profile
+            document.getElementById('companyInfoIndustry').value = companyMetadata.industry || profile.company_industry || '';
+            document.getElementById('companyInfoSize').value = companyMetadata.size || profile.company_size || '';
         }
     } catch (error) {
         console.error('Error loading company info:', error);
@@ -755,7 +973,17 @@ async function editCompanyInfo() {
 
 // CREATE/UPDATE - Save company info
 async function saveCompanyInfo() {
+    console.log('=== saveCompanyInfo FUNCTION CALLED ===');
+    
     const form = document.getElementById('companyInfoForm');
+    if (!form) {
+        console.error('Form not found');
+        showAlert('Form tidak ditemukan', 'danger');
+        return;
+    }
+    
+    console.log('Form found, checking validity...');
+    
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -767,32 +995,231 @@ async function saveCompanyInfo() {
         return;
     }
     
+    // Get save button and disable it during save
+    const saveBtn = document.querySelector('#companyInfoModal .btn-primary');
+    const originalBtnText = saveBtn ? saveBtn.innerHTML : '';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+    }
+    
     try {
         const supabaseClient = authManager.getSupabaseClient();
         if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
         
+        if (!authManager.currentUser || !authManager.currentUser.id) {
+            throw new Error('User tidak terautentikasi');
+        }
+        
+        // Get all form values
+        const companyWebsite = document.getElementById('companyInfoWebsite').value.trim() || null;
+        const companyLinkedIn = document.getElementById('companyInfoLinkedIn').value.trim() || null;
+        const companyIndustry = document.getElementById('companyInfoIndustry').value.trim() || null;
+        const companySize = document.getElementById('companyInfoSize').value.trim() || null;
+        
         const companyData = {
             company_name: companyName,
-            address: document.getElementById('companyInfoAddress').value.trim(),
-            portfolio_url: document.getElementById('companyInfoWebsite').value.trim(),
-            linkedin_url: document.getElementById('companyInfoLinkedIn').value.trim(),
+            address: document.getElementById('companyInfoAddress').value.trim() || null,
+            portfolio_url: companyWebsite,
+            linkedin_url: companyLinkedIn,
+            updated_at: new Date().toISOString()
         };
         
-        const { error } = await supabaseClient
+        // Store industry and size in bio as JSON if they exist
+        // Format: If bio exists and has VISI:, preserve it. Otherwise, store as JSON
+        if (companyIndustry || companySize) {
+            try {
+                const { data: currentProfile } = await supabaseClient
+                    .from('user_profiles')
+                    .select('bio')
+                    .eq('id', authManager.currentUser.id)
+                    .maybeSingle();
+                
+                let existingBio = currentProfile?.bio || '';
+                let companyMetadata = {};
+                
+                // Extract existing metadata if exists
+                if (existingBio && existingBio.includes('COMPANY_METADATA:')) {
+                    try {
+                        const parts = existingBio.split('COMPANY_METADATA:');
+                        existingBio = parts[0].trim();
+                        const metadataJson = parts[1].trim();
+                        companyMetadata = JSON.parse(metadataJson);
+                    } catch (e) {
+                        // If parsing fails, start fresh
+                        companyMetadata = {};
+                    }
+                }
+                
+                // Update metadata
+                if (companyIndustry) companyMetadata.industry = companyIndustry;
+                if (companySize) companyMetadata.size = companySize;
+                
+                // Combine bio with metadata
+                if (existingBio && !existingBio.includes('VISI:')) {
+                    companyData.bio = existingBio + '\n\nCOMPANY_METADATA:' + JSON.stringify(companyMetadata);
+                } else if (existingBio && existingBio.includes('VISI:')) {
+                    // Preserve VISI:MISI: and add metadata
+                    companyData.bio = existingBio + '\n\nCOMPANY_METADATA:' + JSON.stringify(companyMetadata);
+                } else {
+                    companyData.bio = 'COMPANY_METADATA:' + JSON.stringify(companyMetadata);
+                }
+                
+                console.log('Storing company metadata:', companyMetadata);
+            } catch (error) {
+                console.warn('Error storing company metadata:', error);
+            }
+        } else {
+            // If no industry/size, preserve existing bio but remove metadata if exists
+            try {
+                const { data: currentProfile } = await supabaseClient
+                    .from('user_profiles')
+                    .select('bio')
+                    .eq('id', authManager.currentUser.id)
+                    .maybeSingle();
+                
+                if (currentProfile?.bio && currentProfile.bio.includes('COMPANY_METADATA:')) {
+                    // Remove metadata but keep the rest
+                    const parts = currentProfile.bio.split('COMPANY_METADATA:');
+                    const existingBio = parts[0].trim();
+                    if (existingBio) {
+                        companyData.bio = existingBio;
+                    }
+                }
+            } catch (error) {
+                console.warn('Error cleaning company metadata:', error);
+            }
+        }
+        
+        console.log('Company data to save:', companyData);
+        console.log('User ID:', authManager.currentUser.id);
+        
+        // Update database
+        const { data: updatedData, error } = await supabaseClient
             .from('user_profiles')
             .update(companyData)
-            .eq('id', authManager.currentUser.id);
+            .eq('id', authManager.currentUser.id)
+            .select()
+            .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Database update error:', error);
+            throw error;
+        }
         
+        if (!updatedData) {
+            console.error('updatedData is null or undefined');
+            throw new Error('Data tidak ter-update');
+        }
+        
+        console.log('=== DATA UPDATED SUCCESSFULLY ===');
+        console.log('Updated data:', updatedData);
+        console.log('Company name in response:', updatedData.company_name);
+        console.log('Address in response:', updatedData.address);
+        
+        // Close modal immediately
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('companyInfoModal'));
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+        
+        // Show success message
         showAlert('Informasi perusahaan berhasil disimpan!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('companyInfoModal')).hide();
         
-        // Reload profile to update display
-        await loadProfile();
+        // Update UI directly with the returned data (no need to query again)
+        // Update profile header immediately
+        const savedCompanyName = updatedData.company_name || updatedData.full_name || 'Nama Perusahaan';
+        const headerNameEl = document.getElementById('profileHeaderCompanyName');
+        if (headerNameEl) {
+            headerNameEl.textContent = savedCompanyName;
+            console.log('Updated profileHeaderCompanyName:', savedCompanyName);
+        }
+        
+        const headerLocationEl = document.getElementById('profileHeaderLocation');
+        if (headerLocationEl) {
+            headerLocationEl.textContent = updatedData.address || 'Lokasi Perusahaan';
+            console.log('Updated profileHeaderLocation:', updatedData.address);
+        }
+        
+        // Update profile image/logo
+        const initials = savedCompanyName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=200&background=1A3D64&color=fff`;
+        const profileImageEl = document.getElementById('profileHeaderImage');
+        if (profileImageEl) {
+            profileImageEl.src = avatarUrl;
+        }
+        
+        // Update profile form fields
+        const profileCompanyEl = document.getElementById('profileCompany');
+        if (profileCompanyEl) {
+            profileCompanyEl.value = updatedData.company_name || '';
+            console.log('Updated profileCompany field:', updatedData.company_name);
+        }
+        
+        const profileAddressEl = document.getElementById('profileAddress');
+        if (profileAddressEl) {
+            profileAddressEl.value = updatedData.address || '';
+            console.log('Updated profileAddress field:', updatedData.address);
+        }
+        
+        const profileWebsiteEl = document.getElementById('profileCompanyWebsite');
+        if (profileWebsiteEl) {
+            profileWebsiteEl.value = updatedData.portfolio_url || '';
+            console.log('Updated profileCompanyWebsite field:', updatedData.portfolio_url);
+        }
+        
+        const profileLinkedInEl = document.getElementById('profileCompanyLinkedIn');
+        if (profileLinkedInEl) {
+            profileLinkedInEl.value = updatedData.linkedin_url || '';
+            console.log('Updated profileCompanyLinkedIn field:', updatedData.linkedin_url);
+        }
+        
+        // Extract company metadata from bio if exists
+        let companyMetadata = {};
+        if (updatedData.bio && updatedData.bio.includes('COMPANY_METADATA:')) {
+            try {
+                const parts = updatedData.bio.split('COMPANY_METADATA:');
+                const metadataJson = parts[1].trim();
+                companyMetadata = JSON.parse(metadataJson);
+            } catch (e) {
+                console.warn('Error parsing company metadata:', e);
+            }
+        }
+        
+        // Add metadata to updatedData for loadCompanyInfo
+        if (companyMetadata.industry) updatedData.company_industry = companyMetadata.industry;
+        if (companyMetadata.size) updatedData.company_size = companyMetadata.size;
+        
+        // Update company info display directly - THIS IS CRITICAL
+        console.log('Calling loadCompanyInfo with updatedData:', updatedData);
+        loadCompanyInfo(updatedData);
+        
+        // Update contact info sidebar
+        const contactAddressEl = document.getElementById('contactAddress');
+        if (contactAddressEl) {
+            contactAddressEl.textContent = updatedData.address || '-';
+        }
+        
+        // Update profile completeness
+        calculateProfileCompleteness(updatedData);
+        
+        console.log('All UI elements updated successfully');
+        
+        // Re-enable button
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+        }
+        
     } catch (error) {
         console.error('Error saving company info:', error);
-        showAlert('Gagal menyimpan informasi perusahaan: ' + error.message, 'danger');
+        showAlert('Gagal menyimpan informasi perusahaan: ' + (error.message || 'Terjadi kesalahan'), 'danger');
+        
+        // Re-enable button on error
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+        }
     }
 }
 
@@ -902,6 +1329,27 @@ function setupProfileForm() {
 }
 
 function setupEventListeners() {
+    // Prevent form submission for companyInfoForm
+    const companyInfoForm = document.getElementById('companyInfoForm');
+    if (companyInfoForm) {
+        companyInfoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveCompanyInfo();
+        });
+    }
+    
+    // Also add click handler to save button as backup (in case onclick doesn't work)
+    const saveCompanyInfoBtn = document.querySelector('#companyInfoModal .btn-primary[onclick*="saveCompanyInfo"]');
+    if (saveCompanyInfoBtn) {
+        // Remove existing onclick and use addEventListener instead
+        saveCompanyInfoBtn.removeAttribute('onclick');
+        saveCompanyInfoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Save button clicked via addEventListener');
+            saveCompanyInfo();
+        });
+    }
+    
     // Profile link
     const profileLink = document.getElementById('profileLink');
     if (profileLink) {

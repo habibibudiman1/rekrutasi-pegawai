@@ -162,9 +162,32 @@ function showPage(page) {
 }
 
 async function loadProfile() {
-    console.log('loadProfile called');
-    const profile = await authManager.getCurrentUserProfile();
-    console.log('Profile data:', profile);
+    // Force refresh by querying directly from database to bypass cache
+    let profile = null;
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (supabaseClient && authManager.currentUser) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authManager.currentUser.id)
+                .maybeSingle();
+            
+            if (!error && data) {
+                profile = data;
+            } else if (error) {
+                // Fallback to authManager method
+                profile = await authManager.getCurrentUserProfile();
+            }
+        } else {
+            // Fallback to authManager method
+            profile = await authManager.getCurrentUserProfile();
+        }
+    } catch (error) {
+        // Fallback to authManager method
+        profile = await authManager.getCurrentUserProfile();
+    }
+    
     if (profile) {
         // Update profile header
         document.getElementById('profileHeaderName').textContent = profile.full_name || profile.username || 'User';
@@ -227,7 +250,13 @@ function setupProfileForm() {
 }
 
 async function saveProfile() {
-    const submitBtn = document.querySelector('#editProfileModal button[onclick="saveProfile()"]');
+    const submitBtn = document.querySelector('#editProfileModal button[onclick*="saveProfile"]');
+    if (!submitBtn) {
+        console.error('Save button not found');
+        showAlert('Tombol simpan tidak ditemukan', 'danger');
+        return;
+    }
+    
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
@@ -236,37 +265,114 @@ async function saveProfile() {
         const supabaseClient = authManager.getSupabaseClient();
         if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
         
+        if (!authManager.currentUser || !authManager.currentUser.id) {
+            throw new Error('User tidak terautentikasi');
+        }
+        
         const profileData = {
-            full_name: document.getElementById('profileFullName').value,
-            username: document.getElementById('profileUsername').value,
-            phone: document.getElementById('profilePhone').value,
-            address: document.getElementById('profileAddress').value,
-            bio: document.getElementById('profileBio').value,
-            linkedin_url: document.getElementById('profileLinkedIn').value || null,
-            portfolio_url: document.getElementById('profilePortfolio').value || null,
+            full_name: document.getElementById('profileFullName').value.trim(),
+            username: document.getElementById('profileUsername').value.trim(),
+            phone: document.getElementById('profilePhone').value.trim() || null,
+            address: document.getElementById('profileAddress').value.trim() || null,
+            bio: document.getElementById('profileBio').value.trim() || null,
+            linkedin_url: document.getElementById('profileLinkedIn').value.trim() || null,
+            portfolio_url: document.getElementById('profilePortfolio').value.trim() || null,
+            updated_at: new Date().toISOString()
         };
         
-        const { error } = await supabaseClient
+        // Update database and get updated data
+        const { data: updatedData, error } = await supabaseClient
             .from('user_profiles')
             .update(profileData)
-            .eq('id', authManager.currentUser.id);
+            .eq('id', authManager.currentUser.id)
+            .select()
+            .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Database update error:', error);
+            throw error;
+        }
         
-        // Close modal
+        if (!updatedData) {
+            throw new Error('Data tidak ter-update');
+        }
+        
+        // Close modal immediately
         const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
         if (modal) modal.hide();
         
+        // Show success message
         showAlert('Profil berhasil diperbarui!', 'success');
         
-        // Reload profile data
-        await loadProfile();
+        // Update UI directly with the returned data (no need to query again)
+        // Update profile header immediately
+        const headerNameEl = document.getElementById('profileHeaderName');
+        if (headerNameEl) {
+            headerNameEl.textContent = updatedData.full_name || updatedData.username || 'User';
+        }
+        
+        const headerLocationEl = document.getElementById('profileHeaderLocation');
+        if (headerLocationEl) {
+            headerLocationEl.textContent = updatedData.address || 'Belum ditambahkan';
+        }
+        
+        // Update profile avatar
+        if (updatedData.full_name) {
+            const initials = updatedData.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const profileImageEl = document.getElementById('profileHeaderImage');
+            if (profileImageEl) {
+                profileImageEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=200&background=1A3D64&color=fff&bold=true`;
+            }
+        }
+        
+        // Update form fields
+        const profileFullNameEl = document.getElementById('profileFullName');
+        if (profileFullNameEl) profileFullNameEl.value = updatedData.full_name || '';
+        
+        const profileUsernameEl = document.getElementById('profileUsername');
+        if (profileUsernameEl) profileUsernameEl.value = updatedData.username || '';
+        
+        const profilePhoneEl = document.getElementById('profilePhone');
+        if (profilePhoneEl) profilePhoneEl.value = updatedData.phone || '';
+        
+        const profileAddressEl = document.getElementById('profileAddress');
+        if (profileAddressEl) profileAddressEl.value = updatedData.address || '';
+        
+        const profileBioEl = document.getElementById('profileBio');
+        if (profileBioEl) profileBioEl.value = updatedData.bio || '';
+        
+        const profileLinkedInEl = document.getElementById('profileLinkedIn');
+        if (profileLinkedInEl) profileLinkedInEl.value = updatedData.linkedin_url || '';
+        
+        const profilePortfolioEl = document.getElementById('profilePortfolio');
+        if (profilePortfolioEl) profilePortfolioEl.value = updatedData.portfolio_url || '';
+        
+        // Update personal summary display
+        const personalSummaryTextEl = document.getElementById('personalSummaryText');
+        const personalSummaryContentEl = document.getElementById('personalSummaryContent');
+        const addPersonalSummaryBtnEl = document.getElementById('addPersonalSummaryBtn');
+        
+        if (updatedData.bio) {
+            if (personalSummaryTextEl) personalSummaryTextEl.textContent = updatedData.bio;
+            if (personalSummaryContentEl) personalSummaryContentEl.style.display = 'block';
+            if (addPersonalSummaryBtnEl) addPersonalSummaryBtnEl.style.display = 'none';
+        } else {
+            if (personalSummaryContentEl) personalSummaryContentEl.style.display = 'none';
+            if (addPersonalSummaryBtnEl) addPersonalSummaryBtnEl.style.display = 'block';
+        }
         
         // Update user name in header
-        document.getElementById('userName').textContent = profileData.full_name || profileData.username;
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+            userNameEl.textContent = updatedData.full_name || updatedData.username;
+        }
+        
+        // Update profile strength
+        updateProfileStrength(updatedData);
+        
     } catch (error) {
         console.error('Error updating profile:', error);
-        showAlert('Gagal memperbarui profil: ' + error.message, 'danger');
+        showAlert('Gagal memperbarui profil: ' + (error.message || 'Terjadi kesalahan'), 'danger');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
@@ -983,6 +1089,25 @@ function formatDateRange(startDate, endDate, isCurrent) {
 }
 
 function setupEventListeners() {
+    // Prevent form submission for profileForm
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveProfile();
+        });
+    }
+    
+    // Also add click handler to save button as backup
+    const saveProfileBtn = document.querySelector('#editProfileModal .btn-primary[onclick*="saveProfile"]');
+    if (saveProfileBtn) {
+        // Keep onclick but also add event listener as backup
+        saveProfileBtn.addEventListener('click', (e) => {
+            // Don't prevent default if onclick is working
+            console.log('Save profile button clicked via addEventListener');
+        });
+    }
+    
     // Profile link
     const profileLink = document.getElementById('profileLink');
     if (profileLink) {
