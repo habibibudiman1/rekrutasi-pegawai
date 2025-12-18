@@ -104,3 +104,4 @@ ORDER BY policyname;
 -- 2. Pelamar dapat menghapus aplikasi mereka sendiri (mengundurkan diri)
 -- 3. Kolom cover_letter_url tersedia untuk menyimpan URL file cover letter PDF
 
+
