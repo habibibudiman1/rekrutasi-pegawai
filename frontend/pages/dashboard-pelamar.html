@@ -620,7 +620,47 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="submitApplicationBtn">Kirim Lamaran</button>
+                    <button type="button" class="btn btn-primary" id="submitApplicationBtn" onclick="submitApplication()">Kirim Lamaran</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Application Modal -->
+    <div class="modal fade" id="updateApplicationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Berkas Lamaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateApplicationForm">
+                        <input type="hidden" id="updateApplicationId">
+                        <div class="mb-3">
+                            <div id="currentDocumentsInfo" class="alert alert-info">
+                                <!-- Current documents info will be shown here -->
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateCvFile" class="form-label">Upload CV Baru (PDF) <small class="text-muted">(Opsional - hanya jika ingin mengganti)</small></label>
+                            <input type="file" class="form-control" id="updateCvFile" accept=".pdf">
+                            <small class="text-muted">Format: PDF, Maksimal 5MB. Kosongkan jika tidak ingin mengubah CV.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateCoverLetterFile" class="form-label">Upload Surat Lamaran Baru (PDF) <small class="text-muted">(Opsional - hanya jika ingin mengganti)</small></label>
+                            <input type="file" class="form-control" id="updateCoverLetterFile" accept=".pdf">
+                            <small class="text-muted">Format: PDF, Maksimal 5MB. Kosongkan jika tidak ingin mengubah Surat Lamaran.</small>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Anda dapat mengupdate salah satu atau kedua file. File yang tidak dipilih akan tetap menggunakan file sebelumnya.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-warning" id="updateApplicationBtn" onclick="updateApplicationDocuments()">Update Berkas</button>
                 </div>
             </div>
         </div>
