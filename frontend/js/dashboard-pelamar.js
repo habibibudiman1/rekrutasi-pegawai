@@ -162,9 +162,32 @@ function showPage(page) {
 }
 
 async function loadProfile() {
-    console.log('loadProfile called');
-    const profile = await authManager.getCurrentUserProfile();
-    console.log('Profile data:', profile);
+    // Force refresh by querying directly from database to bypass cache
+    let profile = null;
+    try {
+        const supabaseClient = authManager.getSupabaseClient();
+        if (supabaseClient && authManager.currentUser) {
+            const { data, error } = await supabaseClient
+                .from('user_profiles')
+                .select('*')
+                .eq('id', authManager.currentUser.id)
+                .maybeSingle();
+            
+            if (!error && data) {
+                profile = data;
+            } else if (error) {
+                // Fallback to authManager method
+                profile = await authManager.getCurrentUserProfile();
+            }
+        } else {
+            // Fallback to authManager method
+            profile = await authManager.getCurrentUserProfile();
+        }
+    } catch (error) {
+        // Fallback to authManager method
+        profile = await authManager.getCurrentUserProfile();
+    }
+    
     if (profile) {
         // Update profile header
         document.getElementById('profileHeaderName').textContent = profile.full_name || profile.username || 'User';
@@ -227,7 +250,13 @@ function setupProfileForm() {
 }
 
 async function saveProfile() {
-    const submitBtn = document.querySelector('#editProfileModal button[onclick="saveProfile()"]');
+    const submitBtn = document.querySelector('#editProfileModal button[onclick*="saveProfile"]');
+    if (!submitBtn) {
+        console.error('Save button not found');
+        showAlert('Tombol simpan tidak ditemukan', 'danger');
+        return;
+    }
+    
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
@@ -236,37 +265,114 @@ async function saveProfile() {
         const supabaseClient = authManager.getSupabaseClient();
         if (!supabaseClient) throw new Error('Supabase client tidak tersedia');
         
+        if (!authManager.currentUser || !authManager.currentUser.id) {
+            throw new Error('User tidak terautentikasi');
+        }
+        
         const profileData = {
-            full_name: document.getElementById('profileFullName').value,
-            username: document.getElementById('profileUsername').value,
-            phone: document.getElementById('profilePhone').value,
-            address: document.getElementById('profileAddress').value,
-            bio: document.getElementById('profileBio').value,
-            linkedin_url: document.getElementById('profileLinkedIn').value || null,
-            portfolio_url: document.getElementById('profilePortfolio').value || null,
+            full_name: document.getElementById('profileFullName').value.trim(),
+            username: document.getElementById('profileUsername').value.trim(),
+            phone: document.getElementById('profilePhone').value.trim() || null,
+            address: document.getElementById('profileAddress').value.trim() || null,
+            bio: document.getElementById('profileBio').value.trim() || null,
+            linkedin_url: document.getElementById('profileLinkedIn').value.trim() || null,
+            portfolio_url: document.getElementById('profilePortfolio').value.trim() || null,
+            updated_at: new Date().toISOString()
         };
         
-        const { error } = await supabaseClient
+        // Update database and get updated data
+        const { data: updatedData, error } = await supabaseClient
             .from('user_profiles')
             .update(profileData)
-            .eq('id', authManager.currentUser.id);
+            .eq('id', authManager.currentUser.id)
+            .select()
+            .single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Database update error:', error);
+            throw error;
+        }
         
-        // Close modal
+        if (!updatedData) {
+            throw new Error('Data tidak ter-update');
+        }
+        
+        // Close modal immediately
         const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
         if (modal) modal.hide();
         
+        // Show success message
         showAlert('Profil berhasil diperbarui!', 'success');
         
-        // Reload profile data
-        await loadProfile();
+        // Update UI directly with the returned data (no need to query again)
+        // Update profile header immediately
+        const headerNameEl = document.getElementById('profileHeaderName');
+        if (headerNameEl) {
+            headerNameEl.textContent = updatedData.full_name || updatedData.username || 'User';
+        }
+        
+        const headerLocationEl = document.getElementById('profileHeaderLocation');
+        if (headerLocationEl) {
+            headerLocationEl.textContent = updatedData.address || 'Belum ditambahkan';
+        }
+        
+        // Update profile avatar
+        if (updatedData.full_name) {
+            const initials = updatedData.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const profileImageEl = document.getElementById('profileHeaderImage');
+            if (profileImageEl) {
+                profileImageEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=200&background=1A3D64&color=fff&bold=true`;
+            }
+        }
+        
+        // Update form fields
+        const profileFullNameEl = document.getElementById('profileFullName');
+        if (profileFullNameEl) profileFullNameEl.value = updatedData.full_name || '';
+        
+        const profileUsernameEl = document.getElementById('profileUsername');
+        if (profileUsernameEl) profileUsernameEl.value = updatedData.username || '';
+        
+        const profilePhoneEl = document.getElementById('profilePhone');
+        if (profilePhoneEl) profilePhoneEl.value = updatedData.phone || '';
+        
+        const profileAddressEl = document.getElementById('profileAddress');
+        if (profileAddressEl) profileAddressEl.value = updatedData.address || '';
+        
+        const profileBioEl = document.getElementById('profileBio');
+        if (profileBioEl) profileBioEl.value = updatedData.bio || '';
+        
+        const profileLinkedInEl = document.getElementById('profileLinkedIn');
+        if (profileLinkedInEl) profileLinkedInEl.value = updatedData.linkedin_url || '';
+        
+        const profilePortfolioEl = document.getElementById('profilePortfolio');
+        if (profilePortfolioEl) profilePortfolioEl.value = updatedData.portfolio_url || '';
+        
+        // Update personal summary display
+        const personalSummaryTextEl = document.getElementById('personalSummaryText');
+        const personalSummaryContentEl = document.getElementById('personalSummaryContent');
+        const addPersonalSummaryBtnEl = document.getElementById('addPersonalSummaryBtn');
+        
+        if (updatedData.bio) {
+            if (personalSummaryTextEl) personalSummaryTextEl.textContent = updatedData.bio;
+            if (personalSummaryContentEl) personalSummaryContentEl.style.display = 'block';
+            if (addPersonalSummaryBtnEl) addPersonalSummaryBtnEl.style.display = 'none';
+        } else {
+            if (personalSummaryContentEl) personalSummaryContentEl.style.display = 'none';
+            if (addPersonalSummaryBtnEl) addPersonalSummaryBtnEl.style.display = 'block';
+        }
         
         // Update user name in header
-        document.getElementById('userName').textContent = profileData.full_name || profileData.username;
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+            userNameEl.textContent = updatedData.full_name || updatedData.username;
+        }
+        
+        // Update profile strength
+        updateProfileStrength(updatedData);
+        
     } catch (error) {
         console.error('Error updating profile:', error);
-        showAlert('Gagal memperbarui profil: ' + error.message, 'danger');
+        showAlert('Gagal memperbarui profil: ' + (error.message || 'Terjadi kesalahan'), 'danger');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
@@ -983,6 +1089,25 @@ function formatDateRange(startDate, endDate, isCurrent) {
 }
 
 function setupEventListeners() {
+    // Prevent form submission for profileForm
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveProfile();
+        });
+    }
+    
+    // Also add click handler to save button as backup
+    const saveProfileBtn = document.querySelector('#editProfileModal .btn-primary[onclick*="saveProfile"]');
+    if (saveProfileBtn) {
+        // Keep onclick but also add event listener as backup
+        saveProfileBtn.addEventListener('click', (e) => {
+            // Don't prevent default if onclick is working
+            console.log('Save profile button clicked via addEventListener');
+        });
+    }
+    
     // Profile link
     const profileLink = document.getElementById('profileLink');
     if (profileLink) {
@@ -1122,9 +1247,9 @@ function displayJobs(jobs) {
                                         <i class="bi bi-send me-2"></i>Lamar Sekarang
                                     </button>`
                                 }
-                                <a href="job-detail.html?id=${job.id}" class="btn btn-outline-primary">
+                                ${job.id ? `<a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="btn btn-outline-primary" onclick="sessionStorage.setItem('lastViewedJobId', '${job.id}')">
                                     <i class="bi bi-eye me-2"></i>Lihat Detail
-                                </a>
+                                </a>` : '<span class="text-muted">ID tidak tersedia</span>'}
                             </div>
                         </div>
                     </div>
@@ -1172,11 +1297,14 @@ function displayApplications(applications) {
             'Ditolak': 'status-rejected'
         }[app.status] || 'status-pending';
 
+        // Check if can update/delete (can't if already accepted or rejected)
+        const canUpdate = app.status !== 'Diterima' && app.status !== 'Ditolak';
+
         return `
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <h5 class="fw-bold mb-2">${app.jobs?.title || 'N/A'}</h5>
                             <p class="text-muted mb-1">
                                 <i class="bi bi-building me-2"></i>${app.jobs?.company || 'N/A'}<br>
@@ -1184,19 +1312,207 @@ function displayApplications(applications) {
                             </p>
                             <small class="text-muted">Dilamar: ${formatDate(app.created_at)}</small>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
                             <span class="status-badge ${statusClass}">${app.status}</span>
                         </div>
-                        <div class="col-md-3 text-end">
-                            <a href="job-detail.html?id=${app.job_id}" class="btn btn-outline-primary">
-                                <i class="bi bi-eye me-2"></i>Lihat Lowongan
-                            </a>
+                        <div class="col-md-5 text-end">
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                ${app.job_id ? `<a href="job-detail.html?id=${encodeURIComponent(app.job_id)}" class="btn btn-outline-primary btn-sm" onclick="sessionStorage.setItem('lastViewedJobId', '${app.job_id}')">
+                                    <i class="bi bi-eye me-1"></i>Lihat Lowongan
+                                </a>` : ''}
+                                ${canUpdate ? `
+                                    <button class="btn btn-outline-warning btn-sm" onclick="openUpdateApplicationModal('${app.id}')" title="Update Berkas">
+                                        <i class="bi bi-pencil me-1"></i>Update Berkas
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="withdrawApplication('${app.id}')" title="Mengundurkan Diri">
+                                        <i class="bi bi-x-circle me-1"></i>Undur Diri
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// ========== Update Application Functions ==========
+async function openUpdateApplicationModal(applicationId) {
+    try {
+        const manager = window.applicationsManager || applicationsManager;
+        if (!manager) {
+            showAlert('Error: applicationsManager tidak tersedia', 'danger');
+            return;
+        }
+
+        const application = await manager.getApplicationById(applicationId);
+        if (!application) {
+            showAlert('Lamaran tidak ditemukan', 'danger');
+            return;
+        }
+
+        // Check if can update
+        if (application.status === 'Diterima' || application.status === 'Ditolak') {
+            showAlert('Tidak dapat mengupdate lamaran yang sudah diterima atau ditolak', 'warning');
+            return;
+        }
+
+        // Set application ID
+        document.getElementById('updateApplicationId').value = applicationId;
+        
+        // Show current documents info
+        const currentDocsInfo = document.getElementById('currentDocumentsInfo');
+        if (currentDocsInfo) {
+            let infoHtml = '<small class="text-muted">Dokumen saat ini:</small><ul class="mb-0 mt-2">';
+            if (application.cv_url) {
+                infoHtml += `<li><a href="${application.cv_url}" target="_blank" class="text-decoration-none"><i class="bi bi-file-pdf me-1"></i>CV (PDF)</a></li>`;
+            }
+            if (application.cover_letter_url) {
+                infoHtml += `<li><a href="${application.cover_letter_url}" target="_blank" class="text-decoration-none"><i class="bi bi-file-pdf me-1"></i>Surat Lamaran (PDF)</a></li>`;
+            } else if (application.cover_letter) {
+                infoHtml += `<li><i class="bi bi-file-text me-1"></i>Surat Lamaran (Teks)</li>`;
+            }
+            infoHtml += '</ul>';
+            currentDocsInfo.innerHTML = infoHtml;
+        }
+
+        // Reset form
+        document.getElementById('updateApplicationForm').reset();
+        document.getElementById('updateApplicationId').value = applicationId;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('updateApplicationModal'));
+        modal.show();
+    } catch (error) {
+        console.error('Error opening update modal:', error);
+        showAlert('Gagal membuka form update: ' + error.message, 'danger');
+    }
+}
+
+async function updateApplicationDocuments() {
+    const applicationId = document.getElementById('updateApplicationId').value;
+    if (!applicationId) {
+        showAlert('Error: Application ID tidak ditemukan', 'danger');
+        return;
+    }
+
+    const submitBtn = document.getElementById('updateApplicationBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+
+    try {
+        const manager = window.applicationsManager || applicationsManager;
+        if (!manager) {
+            showAlert('Error: applicationsManager tidak tersedia', 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+        }
+
+        // Get form values
+        const coverLetterFile = document.getElementById('updateCoverLetterFile').files[0] || null;
+        const cvFile = document.getElementById('updateCvFile').files[0] || null;
+
+        // At least one file must be provided
+        if (!cvFile && !coverLetterFile) {
+            showAlert('Mohon pilih minimal satu file untuk diupdate (CV atau Surat Lamaran)', 'warning');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+        }
+
+        // Validate file sizes (5MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024;
+
+        if (cvFile) {
+            if (cvFile.size > maxSize) {
+                showAlert('Ukuran file CV terlalu besar. Maksimal 5MB', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+            if (cvFile.type !== 'application/pdf') {
+                showAlert('Format file CV harus PDF', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+        }
+
+        if (coverLetterFile) {
+            if (coverLetterFile.size > maxSize) {
+                showAlert('Ukuran file Surat Lamaran terlalu besar. Maksimal 5MB', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+            if (coverLetterFile.type !== 'application/pdf') {
+                showAlert('Format file Surat Lamaran harus PDF', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+        }
+
+        const applicationData = {
+            cvFile: cvFile,
+            coverLetterFile: coverLetterFile
+        };
+        
+        const result = await manager.updateApplicationDocuments(applicationId, applicationData);
+
+        if (result.success) {
+            showAlert('Berkas lamaran berhasil diupdate!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('updateApplicationModal'));
+            if (modal) modal.hide();
+            
+            // Reset form
+            document.getElementById('updateApplicationForm').reset();
+            
+            // Reload applications
+            await loadApplications();
+        } else {
+            showAlert('Error: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating application:', error);
+        showAlert('Gagal mengupdate berkas: ' + error.message, 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
+
+// ========== Delete Application Functions ==========
+async function withdrawApplication(applicationId) {
+    if (!confirm('Apakah Anda yakin ingin mengundurkan diri dari lamaran ini? Tindakan ini tidak dapat dibatalkan.')) {
+        return;
+    }
+
+    try {
+        const manager = window.applicationsManager || applicationsManager;
+        if (!manager) {
+            showAlert('Error: applicationsManager tidak tersedia', 'danger');
+            return;
+        }
+
+        const result = await manager.deleteApplication(applicationId);
+
+        if (result.success) {
+            showAlert('Anda telah mengundurkan diri dari lamaran ini', 'success');
+            // Reload applications
+            await loadApplications();
+            // Reload overview
+            await loadOverview();
+        } else {
+            showAlert('Error: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        console.error('Error withdrawing application:', error);
+        showAlert('Gagal mengundurkan diri: ' + error.message, 'danger');
+    }
 }
 
 async function loadRecommendations() {
@@ -1231,9 +1547,9 @@ function displayRecommendations(jobs) {
                     </div>
                     <div class="col-md-4 text-end">
                         <div class="d-flex flex-column gap-2 align-items-end">
-                            <a href="job-detail.html?id=${job.id}" class="btn btn-outline-primary">
+                            ${job.id ? `<a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="btn btn-outline-primary">
                                 <i class="bi bi-eye me-2"></i>Lihat Detail
-                            </a>
+                            </a>` : '<span class="text-muted">ID tidak tersedia</span>'}
                         </div>
                     </div>
                 </div>

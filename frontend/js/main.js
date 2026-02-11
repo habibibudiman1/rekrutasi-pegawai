@@ -11,12 +11,13 @@ window.addEventListener('error', (event) => {
         event.preventDefault();
         return false;
     }
-    // Suppress 404 errors for source maps and non-existent resources
+    // Suppress 404 errors for source maps, favicon, and non-existent resources
     if (event.filename && (
         event.filename.includes('pages:1') ||
         event.filename.includes('.map') ||
         event.filename.includes('cv.html') ||
-        event.filename.includes('reload.js')
+        event.filename.includes('reload.js') ||
+        event.filename.includes('favicon.ico')
     )) {
         event.preventDefault();
         return false;
@@ -68,7 +69,10 @@ if (typeof authManager !== 'undefined') {
     // Listen for auth state changes
     authManager.getSupabaseClient()?.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-            console.log('Auth state changed:', event);
+            // Only log in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.debug('Auth state changed:', event);
+            }
             await new Promise(resolve => setTimeout(resolve, 200));
             await updateNavigation();
         }
@@ -78,7 +82,10 @@ if (typeof authManager !== 'undefined') {
 async function updateNavigation(retryCount = 0) {
     try {
         const isAuthenticated = await authManager.isAuthenticated();
-        console.log('updateNavigation: isAuthenticated =', isAuthenticated, 'retryCount =', retryCount);
+        // Only log if retrying or in development mode
+        if (retryCount > 0 || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.debug('updateNavigation: isAuthenticated =', isAuthenticated, 'retryCount =', retryCount);
+        }
         
         // Try multiple ways to find the navigation links
         // Strategy 1: Find by ID (most reliable)
@@ -138,13 +145,19 @@ async function updateNavigation(retryCount = 0) {
         // Strategy 4: Skip update if we're on login/register page and elements not found
         const currentPage = window.location.pathname.split('/').pop();
         if ((currentPage === 'login.html' || currentPage === 'register.html') && (!loginLink || !registerLink)) {
-            console.log('On login/register page, navigation elements not needed');
+            // Only log in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.debug('On login/register page, navigation elements not needed');
+            }
             return; // Don't update navigation on login/register pages if elements don't exist
         }
         
         // If elements not found and we haven't retried, wait and retry
         if ((!loginLink || !registerLink) && retryCount < 3) {
-            console.log('Navigation elements not found, retrying...', { loginLink: !!loginLink, registerLink: !!registerLink });
+            // Only log in development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.debug('Navigation elements not found, retrying...', { loginLink: !!loginLink, registerLink: !!registerLink });
+            }
             await new Promise(resolve => setTimeout(resolve, 200));
             return await updateNavigation(retryCount + 1);
         }
@@ -163,7 +176,10 @@ async function updateNavigation(retryCount = 0) {
             // Get user profile to determine correct dashboard
             try {
                 const profile = await authManager.getCurrentUserProfile();
-                console.log('updateNavigation: profile =', profile);
+                // Only log in development
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.debug('updateNavigation: profile =', profile);
+                }
                 
                 // Replace login/register with dashboard/logout
                 if (loginLink) {
@@ -178,7 +194,10 @@ async function updateNavigation(retryCount = 0) {
                     loginLink.onclick = null;
                     // Remove from active state if exists
                     loginLink.classList.remove('active');
-                    console.log('Login link updated to Dashboard:', loginLink.href);
+                    // Only log in development
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        console.debug('Login link updated to Dashboard:', loginLink.href);
+                    }
                 }
                 
                 if (registerLink) {
@@ -194,7 +213,10 @@ async function updateNavigation(retryCount = 0) {
                     registerLink = newRegisterLink;
                     // Add new event listener
                     registerLink.addEventListener('click', handleLogout, { once: false });
-                    console.log('Register link updated to Logout');
+                    // Only log in development
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        console.debug('Register link updated to Logout');
+                    }
                 }
             } catch (error) {
                 console.warn('Error getting profile for navigation:', error);
