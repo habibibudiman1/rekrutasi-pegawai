@@ -473,7 +473,30 @@ Project ini dibuat untuk keperluan akademik. Silakan sesuaikan dengan kebutuhan 
 
 **Dibuat dengan ❤️ oleh Tim Rekrutasi Pegawai**
 
+<<<<<<< Updated upstream
 Untuk pertanyaan atau bantuan, silakan buka [Issues](../../issues) atau hubungi tim development.
 #   r e k r u t a s i - p e g a w a i 
  
  
+=======
+| No | Nama | Role |
+|----|------|------|
+| 1 | **Ryan Ibnu Syahrani** | Web Developer |
+| 2 | **Daenistry Cecila Wardhan** | UI/UX Designer |
+| 3 | **Muhamad Habibi Budiman** | Project Manager |
+| 4 | **Raihan Tri Dharma** | Web Developer |
+| 5 | **Adilio Adaha** | Web Developer |
+
+---
+
+## 📄 Lisensi & Penggunaan
+
+Proyek ini dibuat untuk keperluan **akademik** (Manajemen Proyek Sistem Informasi).  
+Menggunakan **Supabase** untuk backend dan **Bootstrap** untuk tampilan.
+
+---
+
+<p align="center">
+  <sub>Dibuat dengan ❤️ oleh Tim Rekrutasi Pegawai</sub>
+</p>
+>>>>>>> Stashed changes
