@@ -203,10 +203,6 @@ async function loadProfile() {
         document.getElementById('profileUsername').value = profile.username || '';
         document.getElementById('profileEmail').value = authManager.currentUser?.email || '';
         document.getElementById('profilePhone').value = profile.phone || '';
-        document.getElementById('profileCompany').value = profile.company_name || '';
-        document.getElementById('profileAddress').value = profile.address || '';
-        document.getElementById('profileCompanyWebsite').value = profile.portfolio_url || '';
-        document.getElementById('profileCompanyLinkedIn').value = profile.linkedin_url || '';
         
         // Load company about
         if (profile.bio && !profile.bio.includes('VISI:')) {
@@ -295,11 +291,6 @@ function setupCharacterCounters() {
         { inputId: 'profileFullName', counterId: 'profileFullNameCounter', maxLength: 100 },
         { inputId: 'profileUsername', counterId: 'profileUsernameCounter', maxLength: 50 },
         { inputId: 'profilePhone', counterId: 'profilePhoneCounter', maxLength: 20 },
-        { inputId: 'profileCompany', counterId: 'profileCompanyCounter', maxLength: 100 },
-        { inputId: 'profileAddress', counterId: 'profileAddressCounter', maxLength: 500 },
-        { inputId: 'profileCompanyWebsite', counterId: 'profileCompanyWebsiteCounter', maxLength: 200 },
-        { inputId: 'profileCompanyIndustry', counterId: 'profileCompanyIndustryCounter', maxLength: 50 },
-        { inputId: 'profileCompanyLinkedIn', counterId: 'profileCompanyLinkedInCounter', maxLength: 200 },
         { inputId: 'companyAbout', counterId: 'companyAboutCounter', maxLength: 2000 },
         { inputId: 'companyVision', counterId: 'companyVisionCounter', maxLength: 1000 },
         { inputId: 'companyMission', counterId: 'companyMissionCounter', maxLength: 1000 },
@@ -1150,30 +1141,6 @@ async function saveCompanyInfo() {
         }
         
         // Update profile form fields
-        const profileCompanyEl = document.getElementById('profileCompany');
-        if (profileCompanyEl) {
-            profileCompanyEl.value = updatedData.company_name || '';
-            console.log('Updated profileCompany field:', updatedData.company_name);
-        }
-        
-        const profileAddressEl = document.getElementById('profileAddress');
-        if (profileAddressEl) {
-            profileAddressEl.value = updatedData.address || '';
-            console.log('Updated profileAddress field:', updatedData.address);
-        }
-        
-        const profileWebsiteEl = document.getElementById('profileCompanyWebsite');
-        if (profileWebsiteEl) {
-            profileWebsiteEl.value = updatedData.portfolio_url || '';
-            console.log('Updated profileCompanyWebsite field:', updatedData.portfolio_url);
-        }
-        
-        const profileLinkedInEl = document.getElementById('profileCompanyLinkedIn');
-        if (profileLinkedInEl) {
-            profileLinkedInEl.value = updatedData.linkedin_url || '';
-            console.log('Updated profileCompanyLinkedIn field:', updatedData.linkedin_url);
-        }
-        
         // Extract company metadata from bio if exists
         let companyMetadata = {};
         if (updatedData.bio && updatedData.bio.includes('COMPANY_METADATA:')) {
@@ -1287,10 +1254,6 @@ function setupProfileForm() {
                     full_name: document.getElementById('profileFullName').value,
                     username: document.getElementById('profileUsername').value,
                     phone: document.getElementById('profilePhone').value,
-                    company_name: document.getElementById('profileCompany').value,
-                    address: document.getElementById('profileAddress').value,
-                    portfolio_url: document.getElementById('profileCompanyWebsite').value,
-                    linkedin_url: document.getElementById('profileCompanyLinkedIn').value,
                 };
                 
                 // Also update company info if fields exist

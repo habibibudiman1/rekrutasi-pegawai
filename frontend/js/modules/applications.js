@@ -544,6 +544,149 @@ class ApplicationsManager {
             return null;
         }
     }
+
+    async getApplicationById(applicationId) {
+        try {
+            if (!authManager.isAuthenticated()) return null;
+
+            const supabaseClient = getSupabaseClient();
+            if (!supabaseClient) return null;
+            
+            const { data, error } = await supabaseClient
+                .from('applications')
+                .select(`
+                    *,
+                    jobs (
+                        id,
+                        title,
+                        company,
+                        location
+                    )
+                `)
+                .eq('id', applicationId)
+                .eq('user_id', authManager.currentUser.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching application by ID:', error);
+            return null;
+        }
+    }
+
+    async updateApplicationDocuments(applicationId, applicationData) {
+        try {
+            const profile = await authManager.getCurrentUserProfile();
+            if (!profile || profile.role !== 'Pelamar') {
+                throw new Error('Hanya pelamar yang dapat mengupdate lamaran');
+            }
+
+            if (!authManager.currentUser || !authManager.currentUser.id) {
+                throw new Error('Anda belum login. Silakan login kembali.');
+            }
+
+            // Verify application belongs to user
+            const existing = await this.getApplicationById(applicationId);
+            if (!existing) {
+                throw new Error('Lamaran tidak ditemukan atau Anda tidak memiliki izin');
+            }
+
+            // Check if status allows update (can't update if already accepted or rejected)
+            if (existing.status === 'Diterima' || existing.status === 'Ditolak') {
+                throw new Error('Tidak dapat mengupdate lamaran yang sudah diterima atau ditolak');
+            }
+
+            const supabaseClient = getSupabaseClient();
+            if (!supabaseClient) throw new Error('Supabase client is not initialized');
+
+            const updateData = {
+                updated_at: new Date().toISOString()
+            };
+
+            // Upload new CV if provided
+            if (applicationData.cvFile) {
+                const uploadCVResult = await this.uploadCV(applicationData.cvFile);
+                if (uploadCVResult.success) {
+                    updateData.cv_url = uploadCVResult.url;
+                } else {
+                    throw new Error('Gagal mengunggah CV: ' + uploadCVResult.error);
+                }
+            }
+
+            // Upload new Cover Letter if provided
+            if (applicationData.coverLetterFile) {
+                const uploadResult = await this.uploadCoverLetter(applicationData.coverLetterFile);
+                if (uploadResult.success) {
+                    updateData.cover_letter_url = uploadResult.url;
+                    updateData.cover_letter = null; // Clear text cover letter if file is uploaded
+                } else {
+                    throw new Error('Gagal mengunggah Surat Lamaran: ' + uploadResult.error);
+                }
+            } else if (applicationData.coverLetter !== undefined) {
+                // If cover letter text is provided (not file)
+                updateData.cover_letter = applicationData.coverLetter || null;
+            }
+
+            // Update database
+            const { data, error } = await supabaseClient
+                .from('applications')
+                .update(updateData)
+                .eq('id', applicationId)
+                .eq('user_id', authManager.currentUser.id)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Supabase update error:', error);
+                throw new Error(error.message || 'Gagal mengupdate lamaran');
+            }
+            
+            return { success: true, application: data };
+        } catch (error) {
+            console.error('Error updating application documents:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async deleteApplication(applicationId) {
+        try {
+            const profile = await authManager.getCurrentUserProfile();
+            if (!profile || profile.role !== 'Pelamar') {
+                throw new Error('Hanya pelamar yang dapat mengundurkan diri');
+            }
+
+            if (!authManager.currentUser || !authManager.currentUser.id) {
+                throw new Error('Anda belum login. Silakan login kembali.');
+            }
+
+            // Verify application belongs to user
+            const existing = await this.getApplicationById(applicationId);
+            if (!existing) {
+                throw new Error('Lamaran tidak ditemukan atau Anda tidak memiliki izin');
+            }
+
+            const supabaseClient = getSupabaseClient();
+            if (!supabaseClient) throw new Error('Supabase client is not initialized');
+
+            // Delete application from database
+            const { error } = await supabaseClient
+                .from('applications')
+                .delete()
+                .eq('id', applicationId)
+                .eq('user_id', authManager.currentUser.id);
+
+            if (error) {
+                console.error('Supabase delete error:', error);
+                throw new Error(error.message || 'Gagal menghapus lamaran');
+            }
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting application:', error);
+            return { success: false, error: error.message };
+        }
+    }
 }
 
 const applicationsManager = new ApplicationsManager();
